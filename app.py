@@ -141,7 +141,7 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
     with st.container(key="items-table"):
         for item in items:
             item_columns = st.columns(
-                [0.08, 0.58, 0.17, 0.17], vertical_alignment="center"
+                [0.08, 0.82, 0.10], vertical_alignment="center"
             )
             checked = item_columns[0].checkbox(
                 "", value=item["is_purchased"], key=f"check-{item['id']}"
@@ -153,10 +153,13 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
                     "purchased": checked,
                 }).execute()
                 st.rerun()
-            label = f"~~{item['name']}~~" if item["is_purchased"] else f"**{item['name']}**"
+            label = (
+                f"~~{item['name']}~~ · {item['quantity']}"
+                if item["is_purchased"]
+                else f"**{item['name']}** · {item['quantity']}"
+            )
             item_columns[1].markdown(label)
-            item_columns[2].markdown(item["quantity"])
-            if item_columns[3].button(
+            if item_columns[2].button(
                 "✕", key=f"delete-{item['id']}", help="Remover produto"
             ):
                 client.rpc("delete_shopping_item", {
