@@ -32,16 +32,13 @@ st.markdown(
     }
     .st-key-items-table [data-testid="stHorizontalBlock"] {
         margin: 0;
-        gap: 0.6rem;
+        gap: 1.5rem !important;
         flex-wrap: nowrap !important;
     }
     .st-key-items-table [data-testid="stMarkdownContainer"] {
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
-    }
-    [class*="st-key-item-row-"] [data-testid="stHorizontalBlock"] {
-        gap: 1.25rem !important;
     }
     div[data-testid="stHorizontalBlock"]:has(input[type="checkbox"])
     div[data-testid="column"] > div:first-child {
