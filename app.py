@@ -151,7 +151,7 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
                     }).execute()
                     st.rerun()
                 label = (
-                    f"~~{item['name']}~~ · {item['quantity']}"
+                    f"~~{item['name']} · {item['quantity']}~~"
                     if item["is_purchased"]
                     else f"**{item['name']}** · {item['quantity']}"
                 )
