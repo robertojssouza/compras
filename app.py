@@ -32,23 +32,8 @@ st.markdown(
     }
     .st-key-items-table [data-testid="stHorizontalBlock"] {
         margin: 0;
-        gap: 0.1rem;
+        gap: 0.15rem;
         flex-wrap: nowrap !important;
-        width: 100%;
-    }
-    .st-key-items-table [data-testid="column"] {
-        min-width: 0 !important;
-        flex-shrink: 1 !important;
-    }
-    .st-key-items-table [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(1) {
-        flex: 0 0 1.5rem !important;
-    }
-    .st-key-items-table [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(2) {
-        flex: 0 1 auto !important;
-        width: auto !important;
-    }
-    .st-key-items-table [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(3) {
-        flex: 0 0 1.5rem !important;
     }
     .st-key-items-table [data-testid="stMarkdownContainer"] {
         overflow: hidden;
@@ -150,33 +135,37 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
         return
     with st.container(key="items-table"):
         for item in items:
-            item_columns = st.columns(
-                [0.08, 0.82, 0.10], vertical_alignment="center"
-            )
-            checked = item_columns[0].checkbox(
-                "", value=item["is_purchased"], key=f"check-{item['id']}"
-            )
-            if checked != item["is_purchased"]:
-                client.rpc("set_shopping_item_purchased", {
-                    "code": active_list["invite_code"],
-                    "item_id": item["id"],
-                    "purchased": checked,
-                }).execute()
-                st.rerun()
-            label = (
-                f"~~{item['name']}~~ · {item['quantity']}"
-                if item["is_purchased"]
-                else f"**{item['name']}** · {item['quantity']}"
-            )
-            item_columns[1].markdown(label)
-            if item_columns[2].button(
-                "✕", key=f"delete-{item['id']}", help="Remover produto"
+            with st.container(
+                horizontal=True,
+                horizontal_alignment="left",
+                vertical_alignment="center",
+                gap="small",
+                key=f"item-row-{item['id']}",
             ):
-                client.rpc("delete_shopping_item", {
-                    "code": active_list["invite_code"],
-                    "item_id": item["id"],
-                }).execute()
-                st.rerun()
+                checked = st.checkbox(
+                    "", value=item["is_purchased"], key=f"check-{item['id']}"
+                )
+                if checked != item["is_purchased"]:
+                    client.rpc("set_shopping_item_purchased", {
+                        "code": active_list["invite_code"],
+                        "item_id": item["id"],
+                        "purchased": checked,
+                    }).execute()
+                    st.rerun()
+                label = (
+                    f"~~{item['name']}~~ · {item['quantity']}"
+                    if item["is_purchased"]
+                    else f"**{item['name']}** · {item['quantity']}"
+                )
+                st.markdown(label)
+                if st.button(
+                    "✕", key=f"delete-{item['id']}", help="Remover produto"
+                ):
+                    client.rpc("delete_shopping_item", {
+                        "code": active_list["invite_code"],
+                        "item_id": item["id"],
+                    }).execute()
+                    st.rerun()
 
 
 def render_admin(client: Client) -> None:
