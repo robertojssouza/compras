@@ -30,6 +30,8 @@ O app usa funções RPC que recebem o código da lista. As tabelas não ficam ex
 
 O app cria a lista padrão automaticamente apenas se ainda não existir. Não há opção de criar ou trocar de lista na interface.
 
+Se aparecer o erro `PGRST202` mencionando `get_default_shopping_list`, execute novamente o `schema.sql` atualizado no SQL Editor do Supabase e use **Reboot app** no Streamlit Cloud.
+
 Na primeira execução do SQL, altere `CHANGE-ME-BEFORE-RUN` para um código administrativo secreto antes de clicar em **Run**. Esse código aparece no painel **Administração de listas** do app e permite visualizar e excluir listas. A exclusão remove também todos os produtos da lista.
 
 ## Publicar no Streamlit Community Cloud

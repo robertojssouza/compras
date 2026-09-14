@@ -247,6 +247,12 @@ if __name__ == "__main__":
                 "Execute novamente o conteúdo de `schema.sql` no SQL Editor do "
                 "mesmo projeto configurado nos Secrets e recarregue o app."
             )
+        elif "PGRST202" in message or "get_default_shopping_list" in message:
+            st.error(
+                "O banco ainda não foi atualizado para o modo de lista única. "
+                "Execute novamente o conteúdo atualizado de `schema.sql` no "
+                "Supabase → SQL Editor e depois reinicie o app."
+            )
         else:
             st.error(f"Erro ao acessar o Supabase: {error}")
         st.stop()
