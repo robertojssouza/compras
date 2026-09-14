@@ -72,6 +72,28 @@ as $$
   limit 1
 $$;
 
+create or replace function public.get_default_shopping_list()
+returns public.shopping_lists
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  default_list public.shopping_lists;
+begin
+  select * into default_list
+  from public.shopping_lists
+  order by created_at asc
+  limit 1;
+  if default_list.id is null then
+    insert into public.shopping_lists (name, invite_code)
+    values ('Lista de compras', upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 8)))
+    returning * into default_list;
+  end if;
+  return default_list;
+end;
+$$;
+
 create or replace function public.list_shopping_items(code text)
 returns setof public.shopping_items
 language sql
@@ -178,9 +200,11 @@ revoke all on public.shopping_items from anon, authenticated;
 revoke all on public.app_settings from anon, authenticated;
 grant execute on function public.create_shopping_list(text) to anon, authenticated;
 grant execute on function public.get_shopping_list(text) to anon, authenticated;
+grant execute on function public.get_default_shopping_list() to anon, authenticated;
 grant execute on function public.list_shopping_items(text) to anon, authenticated;
 grant execute on function public.add_shopping_item(text, text, text, text) to anon, authenticated;
 grant execute on function public.set_shopping_item_purchased(text, uuid, boolean) to anon, authenticated;
 grant execute on function public.delete_shopping_item(text, uuid) to anon, authenticated;
 grant execute on function public.list_all_shopping_lists(text) to anon, authenticated;
 grant execute on function public.delete_shopping_list(text, uuid) to anon, authenticated;
+revoke execute on function public.create_shopping_list(text) from anon, authenticated;

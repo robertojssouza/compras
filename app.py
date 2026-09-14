@@ -95,15 +95,10 @@ def get_supabase() -> Client:
     return create_client(setting("SUPABASE_URL"), setting("SUPABASE_ANON_KEY"))
 
 
-def create_list(client: Client, name: str) -> dict[str, Any]:
-    response = client.rpc("create_shopping_list", {
-        "list_name": name.strip() or "Lista de compras",
-    }).execute()
-    return response.data
-
-
-def find_list(client: Client, code: str) -> dict[str, Any] | None:
-    response = client.rpc("get_shopping_list", {"code": code}).execute()
+def get_default_list(client: Client) -> dict[str, Any]:
+    response = client.rpc("get_default_shopping_list").execute()
+    if not response.data:
+        raise RuntimeError("Não foi possível carregar a lista de compras.")
     return response.data
 
 
@@ -121,7 +116,7 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
                     "code": active_list["invite_code"],
                     "item_name": name.strip(),
                     "item_quantity": quantity.strip(),
-                    "creator": st.session_state.user_name,
+                    "creator": "contribuidor",
                 }).execute()
                 st.rerun()
 
@@ -225,55 +220,19 @@ def render_admin(client: Client) -> None:
 
 def main() -> None:
     client = get_supabase()
-    if "user_name" not in st.session_state:
-        st.session_state.user_name = ""
     if "active_list" not in st.session_state:
         st.session_state.active_list = None
     st_autorefresh(interval=5000, key="shopping-list-refresh")
     st.title("🛒 Lista de compras")
     st.caption("Dados persistidos no Supabase · atualização automática a cada 5 segundos")
-    render_admin(client)
-
     active_list = st.session_state.get("active_list")
     if active_list is None:
-        create_tab, join_tab = st.tabs(["Criar lista", "Entrar com código"])
-        with create_tab:
-            if not st.session_state.user_name:
-                st.session_state.user_name = st.text_input(
-                    "Seu nome ou apelido", key="create-user-name"
-                ).strip()
-            list_name = st.text_input("Nome da lista", value="Lista de compras")
-            if st.button("Criar lista", type="primary"):
-                if not st.session_state.user_name:
-                    st.error("Informe seu nome ou apelido.")
-                else:
-                    st.session_state.active_list = create_list(client, list_name)
-                    st.rerun()
-        with join_tab:
-            if not st.session_state.user_name:
-                st.session_state.user_name = st.text_input(
-                    "Seu nome ou apelido", key="join-user-name"
-                ).strip()
-            code = st.text_input("Código de convite", max_chars=8)
-            found = None
-            if st.button("Entrar na lista"):
-                if not st.session_state.user_name:
-                    st.error("Informe seu nome ou apelido.")
-                else:
-                    found = find_list(client, code)
-                if found is None and st.session_state.user_name:
-                    st.error("Código de convite inválido.")
-                elif found is not None and st.session_state.user_name:
-                    st.session_state.active_list = found
-                    st.rerun()
-        return
+        st.session_state.active_list = get_default_list(client)
+        st.rerun()
 
     st.success(
         f"Lista: {active_list['name']} · código de convite: `{active_list['invite_code']}`"
     )
-    if st.button("Trocar de lista"):
-        st.session_state.pop("active_list")
-        st.rerun()
     render_items(client, active_list)
 
 

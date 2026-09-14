@@ -1,6 +1,6 @@
 # Lista de compras colaborativa
 
-Aplicação em Python/Streamlit com dados persistentes no Supabase PostgreSQL. Os participantes entram com nome ou apelido e compartilham uma lista usando um código de convite.
+Aplicação em Python/Streamlit com dados persistentes no Supabase PostgreSQL. O app usa uma única lista compartilhada, carregada automaticamente, sem exigir login, nome ou código de convite.
 
 ## Configuração local
 
@@ -27,6 +27,8 @@ streamlit run app.py
 Execute o conteúdo de [`schema.sql`](./schema.sql) em **Supabase > SQL Editor > New query**. Se você já executou uma versão anterior, execute o arquivo novamente para atualizar as funções e bloquear o acesso direto às tabelas.
 
 O app usa funções RPC que recebem o código da lista. As tabelas não ficam expostas diretamente ao cliente.
+
+O app cria a lista padrão automaticamente apenas se ainda não existir. Não há opção de criar ou trocar de lista na interface.
 
 Na primeira execução do SQL, altere `CHANGE-ME-BEFORE-RUN` para um código administrativo secreto antes de clicar em **Run**. Esse código aparece no painel **Administração de listas** do app e permite visualizar e excluir listas. A exclusão remove também todos os produtos da lista.
 
