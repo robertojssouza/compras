@@ -40,6 +40,16 @@ st.markdown(
         min-width: 0 !important;
         flex-shrink: 1 !important;
     }
+    .st-key-items-table [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(1) {
+        flex: 0 0 1.5rem !important;
+    }
+    .st-key-items-table [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(2) {
+        flex: 0 1 auto !important;
+        width: auto !important;
+    }
+    .st-key-items-table [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(3) {
+        flex: 0 0 1.5rem !important;
+    }
     .st-key-items-table [data-testid="stMarkdownContainer"] {
         overflow: hidden;
         white-space: nowrap;
