@@ -32,6 +32,18 @@ st.markdown(
     }
     .st-key-items-table [data-testid="stHorizontalBlock"] {
         margin: 0;
+        gap: 0.1rem;
+        flex-wrap: nowrap !important;
+        width: 100%;
+    }
+    .st-key-items-table [data-testid="column"] {
+        min-width: 0 !important;
+        flex-shrink: 1 !important;
+    }
+    .st-key-items-table [data-testid="stMarkdownContainer"] {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
     }
     div[data-testid="stHorizontalBlock"]:has(input[type="checkbox"])
     div[data-testid="column"] > div:first-child {
@@ -129,7 +141,7 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
     with st.container(key="items-table"):
         for item in items:
             item_columns = st.columns(
-                [0.08, 0.52, 0.18, 0.22], vertical_alignment="center"
+                [0.08, 0.58, 0.17, 0.17], vertical_alignment="center"
             )
             checked = item_columns[0].checkbox(
                 "", value=item["is_purchased"], key=f"check-{item['id']}"
