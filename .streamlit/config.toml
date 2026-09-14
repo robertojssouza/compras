@@ -5,5 +5,3 @@ base = "light"
 [server]
 headless = true
 
-SUPABASE_URL = "https://tyjddezwrfzmozrggtum.supabase.co"
-SUPABASE_ANON_KEY = "sb_publishable_le3fuNx82e15aQwSaHRKXQ_E1T2GB0y"
