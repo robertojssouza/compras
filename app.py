@@ -32,7 +32,7 @@ st.markdown(
     }
     .st-key-items-table [data-testid="stHorizontalBlock"] {
         margin: 0;
-        gap: 0.15rem;
+        gap: 0.6rem;
         flex-wrap: nowrap !important;
     }
     .st-key-items-table [data-testid="stMarkdownContainer"] {
