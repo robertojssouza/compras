@@ -40,6 +40,9 @@ st.markdown(
         white-space: nowrap;
         text-overflow: ellipsis;
     }
+    [class*="st-key-item-row-"] [data-testid="stHorizontalBlock"] {
+        gap: 1.25rem !important;
+    }
     div[data-testid="stHorizontalBlock"]:has(input[type="checkbox"])
     div[data-testid="column"] > div:first-child {
         margin-top: 0;
