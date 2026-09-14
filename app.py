@@ -234,30 +234,36 @@ def main() -> None:
     st.caption("Dados persistidos no Supabase · atualização automática a cada 5 segundos")
     render_admin(client)
 
-    if not st.session_state.user_name:
-        name = st.text_input("Seu nome ou apelido")
-        if st.button("Continuar", type="primary") and name.strip():
-            st.session_state.user_name = name.strip()
-            st.rerun()
-        if not name.strip():
-            st.info("Informe seu nome para contribuir com a lista.")
-            return
-
     active_list = st.session_state.get("active_list")
     if active_list is None:
         create_tab, join_tab = st.tabs(["Criar lista", "Entrar com código"])
         with create_tab:
+            if not st.session_state.user_name:
+                st.session_state.user_name = st.text_input(
+                    "Seu nome ou apelido", key="create-user-name"
+                ).strip()
             list_name = st.text_input("Nome da lista", value="Lista de compras")
             if st.button("Criar lista", type="primary"):
-                st.session_state.active_list = create_list(client, list_name)
-                st.rerun()
-        with join_tab:
-            code = st.text_input("Código de convite", max_chars=8)
-            if st.button("Entrar na lista"):
-                found = find_list(client, code)
-                if found is None:
-                    st.error("Código de convite inválido.")
+                if not st.session_state.user_name:
+                    st.error("Informe seu nome ou apelido.")
                 else:
+                    st.session_state.active_list = create_list(client, list_name)
+                    st.rerun()
+        with join_tab:
+            if not st.session_state.user_name:
+                st.session_state.user_name = st.text_input(
+                    "Seu nome ou apelido", key="join-user-name"
+                ).strip()
+            code = st.text_input("Código de convite", max_chars=8)
+            found = None
+            if st.button("Entrar na lista"):
+                if not st.session_state.user_name:
+                    st.error("Informe seu nome ou apelido.")
+                else:
+                    found = find_list(client, code)
+                if found is None and st.session_state.user_name:
+                    st.error("Código de convite inválido.")
+                elif found is not None and st.session_state.user_name:
                     st.session_state.active_list = found
                     st.rerun()
         return
