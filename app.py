@@ -139,7 +139,7 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
                 horizontal=True,
                 horizontal_alignment="left",
                 vertical_alignment="center",
-                gap="small",
+                gap="medium",
                 key=f"item-row-{item['id']}",
             ):
                 checked = st.checkbox(
