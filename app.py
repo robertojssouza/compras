@@ -233,9 +233,6 @@ def main() -> None:
         st.session_state.active_list = get_default_list(client)
         st.rerun()
 
-    st.success(
-        f"Lista: {active_list['name']} · código de convite: `{active_list['invite_code']}`"
-    )
     render_items(client, active_list)
 
 
