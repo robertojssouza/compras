@@ -27,7 +27,7 @@ create table if not exists public.app_settings (
 );
 
 insert into public.app_settings (id, admin_code)
-values (true, '304091')
+values (true, 'CHANGE-ME-BEFORE-RUN')
 on conflict (id) do nothing;
 
 alter table public.shopping_lists enable row level security;

@@ -28,7 +28,7 @@ Execute o conteúdo de [`schema.sql`](./schema.sql) em **Supabase > SQL Editor >
 
 O app usa funções RPC que recebem o código da lista. As tabelas não ficam expostas diretamente ao cliente.
 
-Na primeira execução do SQL, altere `TROQUE-ESTE-CODIGO` para um código administrativo secreto antes de clicar em **Run**. Esse código aparece no painel **Administração de listas** do app e permite visualizar e excluir listas. A exclusão remove também todos os produtos da lista.
+Na primeira execução do SQL, altere `CHANGE-ME-BEFORE-RUN` para um código administrativo secreto antes de clicar em **Run**. Esse código aparece no painel **Administração de listas** do app e permite visualizar e excluir listas. A exclusão remove também todos os produtos da lista.
 
 ## Publicar no Streamlit Community Cloud
 
