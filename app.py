@@ -152,7 +152,7 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
     with st.container(key="items-table"):
         for item in items:
             item_columns = st.columns(
-                [0.24, 0.56, 0.20], gap="small", vertical_alignment="center"
+                [0.18, 0.62, 0.20], gap="small", vertical_alignment="center"
             )
             action_label = "Desfazer" if item["is_purchased"] else "Comprar"
             action_key = "undo" if item["is_purchased"] else "buy"
