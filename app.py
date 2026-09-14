@@ -32,7 +32,7 @@ st.markdown(
     }
     .st-key-items-table [data-testid="stHorizontalBlock"] {
         margin: 0;
-        gap: 1.5rem !important;
+        gap: 0.25rem !important;
         flex-wrap: nowrap !important;
     }
     .st-key-items-table [data-testid="stMarkdownContainer"] {
@@ -152,7 +152,7 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
     with st.container(key="items-table"):
         for item in items:
             item_columns = st.columns(
-                [0.15, 0.65, 0.20], gap=None, vertical_alignment="center"
+                [0.12, 0.68, 0.20], gap=None, vertical_alignment="center"
             )
             action_label = "Desfazer" if item["is_purchased"] else "Comprar"
             action_key = "undo" if item["is_purchased"] else "buy"
