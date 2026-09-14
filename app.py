@@ -57,14 +57,14 @@ st.markdown(
         white-space: nowrap;
     }
     .st-key-items-table [class*="st-key-buy-"] button {
-        color: #166534;
-        border-color: #86efac;
-        background: #f0fdf4;
+        color: #ffffff;
+        border-color: #15803d;
+        background: #16a34a;
     }
     .st-key-items-table [class*="st-key-undo-"] button {
-        color: #9a3412;
-        border-color: #fdba74;
-        background: #fff7ed;
+        color: #ffffff;
+        border-color: #c2410c;
+        background: #ea580c;
     }
     .st-key-items-table [class*="st-key-delete-"] button {
         color: #b42318;
