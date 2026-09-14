@@ -66,6 +66,11 @@ st.markdown(
         border-color: #fdba74;
         background: #fff7ed;
     }
+    .st-key-items-table [class*="st-key-delete-"] button {
+        color: #b42318;
+        border-color: #fca5a5;
+        background: #fef2f2;
+    }
     div[data-testid="stHorizontalBlock"]:has(input[type="checkbox"]) p {
         margin: 0;
         line-height: 1.4rem;
