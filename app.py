@@ -12,7 +12,7 @@ st.markdown(
     """
     <style>
     div[data-testid="stHorizontalBlock"] {
-        gap: 0.2rem;
+        gap: 0.35rem;
         align-items: center;
     }
     div[data-testid="stHorizontalBlock"]:has(input[type="checkbox"]) {
@@ -72,30 +72,6 @@ st.markdown(
         color: #b42318;
         font-size: 1rem;
         line-height: 1;
-    }
-    @media (max-width: 640px) {
-        [data-testid="stAppViewContainer"] .main .block-container {
-            padding-left: 0.5rem;
-            padding-right: 0.5rem;
-        }
-        .st-key-items-table [data-testid="stHorizontalBlock"] {
-            gap: 0;
-            width: 100%;
-        }
-        .st-key-items-table [data-testid="column"] {
-            padding-left: 0.05rem;
-            padding-right: 0.05rem;
-        }
-        div[data-testid="stHorizontalBlock"]:has(input[type="checkbox"]) {
-            padding-left: 0.05rem;
-            padding-right: 0.05rem;
-        }
-        .st-key-items-table [data-testid="stMarkdownContainer"] {
-            font-size: 0.9rem;
-        }
-        div[data-testid="stHorizontalBlock"]:has(input[type="checkbox"]) button {
-            font-size: 0.9rem;
-        }
     }
     </style>
     """,
