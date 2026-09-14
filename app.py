@@ -151,40 +151,37 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
         return
     with st.container(key="items-table"):
         for item in items:
-            with st.container(
-                horizontal=True,
-                horizontal_alignment="left",
-                vertical_alignment="center",
-                gap="large",
-                key=f"item-row-{item['id']}",
+            item_columns = st.columns(
+                [0.24, 0.56, 0.20], gap="small", vertical_alignment="center"
+            )
+            action_label = "Desfazer" if item["is_purchased"] else "Comprar"
+            action_key = "undo" if item["is_purchased"] else "buy"
+            if item_columns[0].button(
+                action_label,
+                key=f"{action_key}-{item['id']}",
+                help="Alterar status do produto",
+                use_container_width=True,
             ):
-                action_label = "Desfazer" if item["is_purchased"] else "Comprar"
-                action_key = "undo" if item["is_purchased"] else "buy"
-                if st.button(
-                    action_label,
-                    key=f"{action_key}-{item['id']}",
-                    help="Alterar status do produto",
-                ):
-                    client.rpc("set_shopping_item_purchased", {
-                        "code": active_list["invite_code"],
-                        "item_id": item["id"],
-                        "purchased": not item["is_purchased"],
-                    }).execute()
-                    st.rerun()
-                label = (
-                    f"~~{item['name']} · {item['quantity']}~~"
-                    if item["is_purchased"]
-                    else f"**{item['name']}** · {item['quantity']}"
-                )
-                st.markdown(label)
-                if st.button(
-                    "✕", key=f"delete-{item['id']}", help="Remover produto"
-                ):
-                    client.rpc("delete_shopping_item", {
-                        "code": active_list["invite_code"],
-                        "item_id": item["id"],
-                    }).execute()
-                    st.rerun()
+                client.rpc("set_shopping_item_purchased", {
+                    "code": active_list["invite_code"],
+                    "item_id": item["id"],
+                    "purchased": not item["is_purchased"],
+                }).execute()
+                st.rerun()
+            label = (
+                f"~~{item['name']} · {item['quantity']}~~"
+                if item["is_purchased"]
+                else f"**{item['name']}** · {item['quantity']}"
+            )
+            item_columns[1].markdown(label)
+            if item_columns[2].button(
+                "✕", key=f"delete-{item['id']}", help="Remover produto"
+            ):
+                client.rpc("delete_shopping_item", {
+                    "code": active_list["invite_code"],
+                    "item_id": item["id"],
+                }).execute()
+                st.rerun()
 
 
 def render_admin(client: Client) -> None:
