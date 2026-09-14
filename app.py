@@ -53,6 +53,22 @@ st.markdown(
         min-height: 1.4rem;
         padding: 0;
     }
+    .st-key-items-table [data-testid="stButton"] button {
+        min-height: 1.4rem;
+        padding: 0.15rem 0.45rem;
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
+    .st-key-items-table [class*="st-key-buy-"] button {
+        color: #166534;
+        border-color: #86efac;
+        background: #f0fdf4;
+    }
+    .st-key-items-table [class*="st-key-undo-"] button {
+        color: #9a3412;
+        border-color: #fdba74;
+        background: #fff7ed;
+    }
     div[data-testid="stHorizontalBlock"]:has(input[type="checkbox"]) p {
         margin: 0;
         line-height: 1.4rem;
@@ -140,14 +156,17 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
                 gap="large",
                 key=f"item-row-{item['id']}",
             ):
-                checked = st.checkbox(
-                    "", value=item["is_purchased"], key=f"check-{item['id']}"
-                )
-                if checked != item["is_purchased"]:
+                action_label = "Desfazer" if item["is_purchased"] else "Comprar"
+                action_key = "undo" if item["is_purchased"] else "buy"
+                if st.button(
+                    action_label,
+                    key=f"{action_key}-{item['id']}",
+                    help="Alterar status do produto",
+                ):
                     client.rpc("set_shopping_item_purchased", {
                         "code": active_list["invite_code"],
                         "item_id": item["id"],
-                        "purchased": checked,
+                        "purchased": not item["is_purchased"],
                     }).execute()
                     st.rerun()
                 label = (
