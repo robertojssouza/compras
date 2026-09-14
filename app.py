@@ -56,6 +56,28 @@ st.markdown(
         font-size: 0.8rem;
         white-space: nowrap;
     }
+    @media (max-width: 640px) {
+        .st-key-items-table [data-testid="stHorizontalBlock"] {
+            gap: 0 !important;
+        }
+        .st-key-items-table [data-testid="column"] {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            min-width: 0 !important;
+        }
+        .st-key-items-table [data-testid="column"]:first-child {
+            flex: 0 0 72px !important;
+            width: 72px !important;
+        }
+        .st-key-items-table [data-testid="column"]:nth-child(2) {
+            flex: 1 1 auto !important;
+            width: auto !important;
+        }
+        .st-key-items-table [data-testid="column"]:last-child {
+            flex: 0 0 36px !important;
+            width: 36px !important;
+        }
+    }
     .st-key-items-table [class*="st-key-buy-"] button {
         color: #ffffff;
         border-color: #15803d;
