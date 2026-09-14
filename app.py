@@ -160,7 +160,6 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
                 action_label,
                 key=f"{action_key}-{item['id']}",
                 help="Alterar status do produto",
-                use_container_width=True,
             ):
                 client.rpc("set_shopping_item_purchased", {
                     "code": active_list["invite_code"],
