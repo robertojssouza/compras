@@ -130,9 +130,75 @@ def setting(name: str) -> str:
     return str(value)
 
 
-@st.cache_resource
 def get_supabase() -> Client:
     return create_client(setting("SUPABASE_URL"), setting("SUPABASE_ANON_KEY"))
+
+
+def restore_auth_session(client: Client) -> dict[str, Any] | None:
+    access_token = st.session_state.get("access_token")
+    refresh_token = st.session_state.get("refresh_token")
+    if access_token and refresh_token:
+        client.auth.set_session(access_token, refresh_token)
+
+    auth_code = st.query_params.get("code")
+    if auth_code:
+        code_verifier = st.session_state.get("oauth_code_verifier")
+        if code_verifier:
+            client.auth._storage.set_item(
+                f"{client.auth._storage_key}-code-verifier", code_verifier
+            )
+        response = client.auth.exchange_code_for_session({
+            "auth_code": auth_code,
+            "redirect_to": setting("SUPABASE_REDIRECT_URL"),
+        })
+        if response.session is None or response.user is None:
+            raise RuntimeError("Não foi possível concluir o login Google.")
+        st.session_state.access_token = response.session.access_token
+        st.session_state.refresh_token = response.session.refresh_token
+        st.session_state.user_email = response.user.email
+        st.query_params.clear()
+        st.rerun()
+
+    if not st.session_state.get("user_email"):
+        return None
+    authorized = client.rpc("is_authorized_account").execute().data
+    if not authorized:
+        return {"email": st.session_state.user_email, "authorized": False}
+    return {"email": st.session_state.user_email, "authorized": True}
+
+
+def render_login(client: Client) -> None:
+    st.title("🛒 Lista de compras")
+    st.subheader("Entrar")
+    st.write("Use sua conta Google para acessar a lista compartilhada.")
+    redirect_url = setting("SUPABASE_REDIRECT_URL")
+    response = client.auth.sign_in_with_oauth({
+        "provider": "google",
+        "options": {"redirect_to": redirect_url},
+    })
+    st.session_state.oauth_code_verifier = client.auth._storage.get_item(
+        f"{client.auth._storage_key}-code-verifier"
+    )
+    st.link_button("Entrar com Google", response.url, type="primary")
+
+
+def render_account_blocked(email: str) -> None:
+    st.title("Acesso pendente")
+    st.warning(
+        f"A conta `{email}` ainda não foi autorizada pelo administrador."
+    )
+    st.info("Peça ao administrador para adicionar seu e-mail ao sistema.")
+    if st.button("Sair", key="blocked-logout"):
+        st.session_state.clear()
+        st.rerun()
+
+
+def render_user_bar(client: Client, email: str) -> None:
+    st.caption(f"Conectado como {email}")
+    if st.button("Sair", key="logout"):
+        client.auth.sign_out()
+        st.session_state.clear()
+        st.rerun()
 
 
 def get_default_list(client: Client) -> dict[str, Any]:
@@ -210,73 +276,144 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
 
 
 def render_admin(client: Client) -> None:
-    if st.button(
-        "Fechar administração"
-        if st.session_state.get("admin_open")
-        else "Abrir administração",
-        key="toggle-admin",
-    ):
-        st.session_state.admin_open = not st.session_state.get("admin_open", False)
-        st.rerun()
-    if not st.session_state.get("admin_open"):
-        return
-
-    st.subheader("Administração de listas")
+    st.subheader("Administração")
     admin_code = st.text_input(
-        "Código administrativo",
+        "Senha administrativa",
         type="password",
         value=st.session_state.get("admin_code", ""),
         key="admin-code-input",
     )
-    if st.button("Visualizar listas", key="load-admin-lists"):
-        response = client.rpc(
-            "list_all_shopping_lists", {"p_admin_code": admin_code}
-        ).execute()
-        st.session_state.admin_lists = response.data or []
+    if st.button("Entrar na administração", key="load-admin"):
         st.session_state.admin_code = admin_code
+        st.session_state.admin_authenticated = False
+        try:
+            accounts_response = client.rpc(
+                "list_authorized_accounts", {"p_admin_code": admin_code}
+            ).execute()
+            st.session_state.admin_accounts = accounts_response.data or []
+            st.session_state.admin_authenticated = True
+        except Exception as error:
+            st.error(f"Não foi possível abrir a administração: {error}")
+    if not st.session_state.get("admin_authenticated"):
+        return
+    admin_code = st.session_state["admin_code"]
 
-    lists = st.session_state.get("admin_lists")
-    if lists is None:
-        return
-    if not lists:
-        st.info("Nenhuma lista criada.")
-        return
-    st.warning("Excluir uma lista também exclui todos os seus produtos.")
-    for shopping_list in lists:
-        st.write(
-            f"{shopping_list['name']} · `{shopping_list['invite_code']}`"
-        )
-        st.caption(f"Criada em: {shopping_list['created_at'][:10]}")
-        if st.button(
-            "Excluir lista",
-            key=f"admin-delete-{shopping_list['id']}",
-            use_container_width=True,
-        ):
-            client.rpc("delete_shopping_list", {
-                "p_admin_code": st.session_state.get("admin_code", ""),
-                "target_list_id": shopping_list["id"],
-            }).execute()
-            st.session_state.admin_lists = [
-                item for item in lists if item["id"] != shopping_list["id"]
-            ]
-            if st.session_state.get("active_list", {}).get("id") == shopping_list["id"]:
-                st.session_state.pop("active_list")
-            st.rerun()
+    account_tab, list_tab = st.tabs(["Contas autorizadas", "Listas"])
+    with account_tab:
+        st.write("Somente e-mails cadastrados e ativos podem usar o sistema.")
+        with st.form("add-authorized-account", clear_on_submit=True):
+            account_email = st.text_input("E-mail Google")
+            account_note = st.text_input("Observação (opcional)")
+            if st.form_submit_button("Adicionar conta"):
+                try:
+                    response = client.rpc(
+                        "add_authorized_account",
+                        {
+                            "p_admin_code": admin_code,
+                            "account_email": account_email,
+                            "account_note": account_note,
+                        },
+                    ).execute()
+                    st.session_state.admin_accounts.append(response.data)
+                    st.success("Conta autorizada.")
+                except Exception as error:
+                    st.error(f"Não foi possível adicionar a conta: {error}")
+
+        for account in st.session_state.admin_accounts:
+            state = "Ativa" if account["active"] else "Inativa"
+            st.write(f"**{account['email']}** · {state}")
+            if account.get("note"):
+                st.caption(account["note"])
+            action = "Desativar" if account["active"] else "Ativar"
+            if st.button(action, key=f"toggle-account-{account['id']}"):
+                try:
+                    response = client.rpc(
+                        "set_authorized_account_active",
+                        {
+                            "p_admin_code": admin_code,
+                            "account_id": account["id"],
+                            "is_active": not account["active"],
+                        },
+                    ).execute()
+                    account.update(response.data)
+                    st.rerun()
+                except Exception as error:
+                    st.error(f"Não foi possível alterar a conta: {error}")
+            if st.button("Remover", key=f"remove-account-{account['id']}"):
+                try:
+                    client.rpc(
+                        "delete_authorized_account",
+                        {
+                            "p_admin_code": admin_code,
+                            "account_id": account["id"],
+                        },
+                    ).execute()
+                    st.session_state.admin_accounts = [
+                        item for item in st.session_state.admin_accounts
+                        if item["id"] != account["id"]
+                    ]
+                    st.rerun()
+                except Exception as error:
+                    st.error(f"Não foi possível remover a conta: {error}")
+
+    with list_tab:
+        try:
+            response = client.rpc(
+                "list_all_shopping_lists", {"p_admin_code": admin_code}
+            ).execute()
+            lists = response.data or []
+        except Exception as error:
+            st.error(f"Não foi possível carregar as listas: {error}")
+            return
+        if not lists:
+            st.info("Nenhuma lista criada.")
+            return
+        st.warning("Excluir uma lista também exclui todos os seus produtos.")
+        for shopping_list in lists:
+            st.write(
+                f"{shopping_list['name']} · `{shopping_list['invite_code']}`"
+            )
+            st.caption(f"Criada em: {shopping_list['created_at'][:10]}")
+            if st.button(
+                "Excluir lista",
+                key=f"admin-delete-{shopping_list['id']}",
+                use_container_width=True,
+            ):
+                client.rpc("delete_shopping_list", {
+                    "p_admin_code": admin_code,
+                    "target_list_id": shopping_list["id"],
+                }).execute()
+                if st.session_state.get("active_list", {}).get("id") == shopping_list["id"]:
+                    st.session_state.pop("active_list")
+                st.rerun()
 
 
 def main() -> None:
     client = get_supabase()
+    user = restore_auth_session(client)
+    if user is None:
+        render_login(client)
+        return
+    if not user["authorized"]:
+        render_account_blocked(user["email"])
+        return
+
     if "active_list" not in st.session_state:
         st.session_state.active_list = None
     st_autorefresh(interval=5000, key="shopping-list-refresh")
     st.title("🛒 Lista de compras")
     st.caption("Dados persistidos no Supabase · atualização automática a cada 5 segundos")
+    render_user_bar(client, user["email"])
     active_list = st.session_state.get("active_list")
     if active_list is None:
         st.session_state.active_list = get_default_list(client)
         st.rerun()
 
-    render_items(client, active_list)
+    list_tab, admin_tab = st.tabs(["Lista de compras", "Administração"])
+    with list_tab:
+        render_items(client, active_list)
+    with admin_tab:
+        render_admin(client)
 
 
 if __name__ == "__main__":
