@@ -21,7 +21,21 @@ st.markdown(
         height: 0vh !important;
     }
 
-    /* Impede que as colunas empilhem na vertical no celular */
+    /* Trava os campos 'Quantidade' e 'Unidade' LADO A LADO no celular */
+    [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 0.5rem !important;
+        width: 100% !important;
+    }
+
+    [data-testid="stForm"] [data-testid="stColumn"] {
+        min-width: 0 !important;
+        flex: 1 1 50% !important;
+    }
+
+    /* Impede que as colunas da lista empilhem na vertical no celular */
     .st-key-items-table [data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
@@ -122,7 +136,7 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
     with st.form("add_item", clear_on_submit=True):
         name = st.text_input("Produto", placeholder="Ex.: arroz")
         
-        # Divisão da quantidade em Número e Unidade de Medida
+        # Divisão da quantidade em Número e Unidade na mesma linha
         col_qty, col_unit = st.columns([1, 1])
         with col_qty:
             qty_num = st.text_input("Quantidade", value="1")
