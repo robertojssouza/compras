@@ -1,7 +1,5 @@
 import os
-from html import escape
 from typing import Any
-from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
@@ -132,54 +130,6 @@ def setting(name: str) -> str:
     return str(value)
 
 
-def get_redirect_url() -> str:
-    configured_url = os.getenv("SUPABASE_REDIRECT_URL", "")
-    if not configured_url:
-        try:
-            configured_url = str(st.secrets.get("SUPABASE_REDIRECT_URL", ""))
-        except FileNotFoundError:
-            configured_url = ""
-    if configured_url:
-        return configured_url.rstrip("/")
-
-    headers = st.context.headers
-    host = headers.get("X-Forwarded-Host") or headers.get("Host")
-    if host:
-        protocol = headers.get("X-Forwarded-Proto", "https").split(",")[0].strip()
-        return f"{protocol}://{host}".rstrip("/")
-    return "http://localhost:8501"
-
-
-def get_oauth_redirect_url(verifier: str | None = None) -> str:
-    redirect_url = get_redirect_url()
-    if not verifier:
-        return redirect_url
-    parts = urlsplit(redirect_url)
-    query = dict(parse_qsl(parts.query, keep_blank_values=True))
-    query["oauth_verifier"] = verifier
-    return urlunsplit((
-        parts.scheme,
-        parts.netloc,
-        parts.path,
-        urlencode(query),
-        parts.fragment,
-    ))
-
-
-def add_verifier_to_oauth_url(oauth_url: str, verifier: str) -> str:
-    parts = urlsplit(oauth_url)
-    query = dict(parse_qsl(parts.query, keep_blank_values=True))
-    redirect_url = get_oauth_redirect_url(verifier)
-    query["redirect_to"] = redirect_url
-    return urlunsplit((
-        parts.scheme,
-        parts.netloc,
-        parts.path,
-        urlencode(query),
-        parts.fragment,
-    ))
-
-
 def get_supabase() -> Client:
     return create_client(setting("SUPABASE_URL"), setting("SUPABASE_ANON_KEY"))
 
@@ -189,29 +139,6 @@ def restore_auth_session(client: Client) -> dict[str, Any] | None:
     refresh_token = st.session_state.get("refresh_token")
     if access_token and refresh_token:
         client.auth.set_session(access_token, refresh_token)
-
-    auth_code = st.query_params.get("code")
-    if auth_code:
-        code_verifier = st.query_params.get("oauth_verifier")
-        if not code_verifier:
-            st.query_params.clear()
-            st.session_state.auth_error = (
-                "A sessão de login expirou antes de ser concluída. "
-                "Clique novamente em Entrar com Google."
-            )
-            st.rerun()
-        response = client.auth.exchange_code_for_session({
-            "auth_code": auth_code,
-            "code_verifier": code_verifier,
-            "redirect_to": get_oauth_redirect_url(code_verifier),
-        })
-        if response.session is None or response.user is None:
-            raise RuntimeError("Não foi possível concluir o login Google.")
-        st.session_state.access_token = response.session.access_token
-        st.session_state.refresh_token = response.session.refresh_token
-        st.session_state.user_email = response.user.email
-        st.query_params.clear()
-        st.rerun()
 
     if not st.session_state.get("user_email"):
         return None
@@ -223,40 +150,65 @@ def restore_auth_session(client: Client) -> dict[str, Any] | None:
 
 def render_login(client: Client) -> None:
     st.title("🛒 Lista de compras")
-    st.subheader("Entrar")
     auth_error = st.session_state.pop("auth_error", None)
     if auth_error:
         st.warning(auth_error)
-    st.write("Use sua conta Google para acessar a lista compartilhada.")
-    response = client.auth.sign_in_with_oauth({
-        "provider": "google",
-        "options": {"redirect_to": get_redirect_url()},
-    })
-    verifier = client.auth._storage.get_item(
-        f"{client.auth._storage_key}-code-verifier"
-    )
-    if not verifier:
-        raise RuntimeError("Não foi possível preparar o login Google.")
-    oauth_url = add_verifier_to_oauth_url(response.url, verifier)
-    st.markdown(
-        f"""
-        <a href="{escape(oauth_url, quote=True)}" target="_self" class="login-button">
-            Entrar com Google
-        </a>
-        <style>
-        .login-button {{
-            display: inline-block;
-            padding: 0.45rem 0.9rem;
-            border-radius: 0.4rem;
-            background: #ff4b4b;
-            color: white !important;
-            font-weight: 600;
-            text-decoration: none;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    login_tab, signup_tab = st.tabs(["Entrar", "Criar conta"])
+    with login_tab:
+        with st.form("login-form"):
+            email = st.text_input("E-mail")
+            password = st.text_input("Senha", type="password")
+            if st.form_submit_button("Entrar", type="primary"):
+                try:
+                    response = client.auth.sign_in_with_password({
+                        "email": email.strip().lower(),
+                        "password": password,
+                    })
+                    if response.session is None or response.user is None:
+                        raise RuntimeError("Login não retornou uma sessão válida.")
+                    st.session_state.access_token = response.session.access_token
+                    st.session_state.refresh_token = response.session.refresh_token
+                    st.session_state.user_email = response.user.email
+                    st.rerun()
+                except Exception as error:
+                    st.error(f"Não foi possível entrar: {error}")
+    with signup_tab:
+        st.info(
+            "Depois de criar a conta, o administrador precisa autorizar seu "
+            "e-mail antes do acesso à lista."
+        )
+        with st.form("signup-form"):
+            signup_email = st.text_input("E-mail", key="signup-email")
+            signup_password = st.text_input(
+                "Senha (mínimo de 6 caracteres)",
+                type="password",
+                key="signup-password",
+            )
+            signup_confirmation = st.text_input(
+                "Repetir senha", type="password", key="signup-confirmation"
+            )
+            if st.form_submit_button("Criar conta"):
+                if signup_password != signup_confirmation:
+                    st.error("As senhas não coincidem.")
+                elif len(signup_password) < 6:
+                    st.error("A senha precisa ter pelo menos 6 caracteres.")
+                else:
+                    try:
+                        response = client.auth.sign_up({
+                            "email": signup_email.strip().lower(),
+                            "password": signup_password,
+                        })
+                        if response.session:
+                            st.info(
+                                "Conta criada. Aguarde a autorização do administrador."
+                            )
+                        else:
+                            st.success(
+                                "Conta criada. Verifique seu e-mail se a confirmação "
+                                "estiver ativada e peça autorização ao administrador."
+                            )
+                    except Exception as error:
+                        st.error(f"Não foi possível criar a conta: {error}")
 
 
 def render_account_blocked(email: str) -> None:
@@ -379,7 +331,7 @@ def render_admin(client: Client) -> None:
     with account_tab:
         st.write("Somente e-mails cadastrados e ativos podem usar o sistema.")
         with st.form("add-authorized-account", clear_on_submit=True):
-            account_email = st.text_input("E-mail Google")
+            account_email = st.text_input("E-mail da conta")
             account_note = st.text_input("Observação (opcional)")
             if st.form_submit_button("Adicionar conta"):
                 try:

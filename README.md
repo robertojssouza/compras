@@ -1,6 +1,6 @@
 # Lista de compras colaborativa
 
-Aplicação em Python/Streamlit com dados persistentes no Supabase PostgreSQL. O app usa uma única lista compartilhada, carregada automaticamente, com login Google e contas autorizadas pelo administrador.
+Aplicação em Python/Streamlit com dados persistentes no Supabase PostgreSQL. O app usa uma única lista compartilhada, carregada automaticamente, com login por e-mail e senha e contas autorizadas pelo administrador.
 
 ## Configuração local
 
@@ -9,10 +9,9 @@ Crie o arquivo `.streamlit/secrets.toml`:
 ```toml
 SUPABASE_URL = "https://seu-projeto.supabase.co"
 SUPABASE_ANON_KEY = "sua-chave-publica"
-SUPABASE_REDIRECT_URL = "https://seu-app.streamlit.app" # opcional
 ```
 
-Use a URL e a chave pública `anon`/`publishable` em **Project Settings > API**. Nunca use a chave `service_role`. `SUPABASE_REDIRECT_URL` é opcional; quando ausente, o app tenta detectar automaticamente a URL atual.
+Use a URL e a chave pública `anon`/`publishable` em **Project Settings > API**. Nunca use a chave `service_role`.
 
 Instale e execute:
 
@@ -33,20 +32,11 @@ O app cria a lista padrão automaticamente apenas se ainda não existir. Não h�
 
 Se aparecer o erro `PGRST202` mencionando `get_default_shopping_list`, execute novamente o `schema.sql` atualizado no SQL Editor do Supabase e use **Reboot app** no Streamlit Cloud.
 
-Antes da primeira execução do SQL, altere `CHANGE-ME-BEFORE-RUN` para um código administrativo secreto e substitua `first-admin@example.com` pelo primeiro e-mail Google autorizado. O código permite abrir a aba **Administração**, onde é possível adicionar, ativar, desativar e remover contas autorizadas, além de visualizar e excluir listas.
+Antes da primeira execução do SQL, altere `CHANGE-ME-BEFORE-RUN` para um código administrativo secreto e substitua `first-admin@example.com` pelo primeiro e-mail autorizado. O código permite abrir a aba **Administração**, onde é possível adicionar, ativar, desativar e remover contas autorizadas, além de visualizar e excluir listas.
 
-## Configurar o login Google
+## Configurar o login direto
 
-1. No Supabase, abra **Authentication > Providers > Google** e ative o provedor.
-2. Crie um OAuth Client ID do tipo **Web application** no Google Cloud.
-3. Use como callback autorizado a URL exibida pelo Supabase em **Authentication > URL Configuration**, normalmente:
-   `https://SEU-PROJETO.supabase.co/auth/v1/callback`.
-4. Cadastre o Client ID e o Client Secret no provedor Google do Supabase.
-5. Em **Authentication > URL Configuration**, adicione também a URL do app Streamlit em **Redirect URLs**. Como o fluxo PKCE transporta um parâmetro temporário na URL, use o padrão:
-   `https://SEU-APP.streamlit.app/**`
-6. Configure `SUPABASE_REDIRECT_URL` com a URL base do app no Streamlit Cloud e localmente.
-
-Depois de executar o SQL e configurar o primeiro e-mail, abra o app, entre com a conta Google autorizada e use a aba **Administração** com o código administrativo.
+No Supabase, abra **Authentication → Sign In / Providers → Email** e mantenha o provedor de e-mail ativado. O app oferece as abas **Entrar** e **Criar conta**. Após o cadastro, o administrador precisa autorizar o e-mail na aba **Administração** antes que a pessoa consiga usar a lista.
 
 ## Publicar no Streamlit Community Cloud
 
@@ -57,7 +47,6 @@ Depois de executar o SQL e configurar o primeiro e-mail, abra o app, entre com a
 ```toml
 SUPABASE_URL = "https://seu-projeto.supabase.co"
 SUPABASE_ANON_KEY = "sua-chave-publica"
-SUPABASE_REDIRECT_URL = "https://seu-app.streamlit.app" # opcional
 ```
 
 O arquivo local `.streamlit/secrets.toml` está protegido pelo `.gitignore`.
