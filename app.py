@@ -309,7 +309,7 @@ def main() -> None:
         st.session_state.active_list = None
     st_autorefresh(interval=5000, key="shopping-list-refresh")
     st.title("🛒 Lista de compras")
-    st.caption("Dados persistidos no Supabase · atualização automática a cada 5 segundos")
+    #st.caption("Dados persistidos no Supabase · atualização automática a cada 5 segundos")
     active_list = st.session_state.get("active_list")
     if active_list is None:
         st.session_state.active_list = get_default_list(client)
