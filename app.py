@@ -15,13 +15,13 @@ st.markdown(
         padding-top: 0rem;
     }
     header {
-            visibility: hidden;
-            height: 0vh;
-        }
-        .block-container {
-            padding-top: 0rem;
-        }
-        
+        visibility: hidden;
+        height: 0vh;
+    }
+    .block-container {
+        padding-top: 0rem;
+    }
+    
     @media (max-width: 640px) {
         .stAppViewContainer .main .block-container {
             padding-top: 0 !important;
@@ -72,23 +72,23 @@ st.markdown(
     .st-key-items-table [class*="st-key-item-delete-"] {
         flex: 0 0 36px !important;
         width: 36px !important;
+        margin-left: auto !important;
     }
     @media (max-width: 640px) {
         .st-key-items-table [class*="st-key-item-row-"] {
-            gap: 0 !important;
+            gap: 0.5rem !important;
         }
         .st-key-items-table [class*="st-key-item-action-"] {
             margin-right: 0 !important;
         }
         .st-key-items-table [class*="st-key-item-name-"] {
-            flex: 0 0 0 !important;
+            flex: 1 1 auto !important;
             margin: 0 !important;
         }
         .st-key-items-table [class*="st-key-item-delete-"] {
             flex: 0 0 30px !important;
             width: 30px !important;
-            position: relative;
-            left: 0.6rem;
+            margin-left: auto !important;
         }
     }
     .st-key-items-table [data-testid="stMarkdownContainer"] {
@@ -226,7 +226,7 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
             ):
                 action_label = "Desfazer" if item["is_purchased"] else "Comprar"
                 action_key = "undo" if item["is_purchased"] else "buy"
-                with st.container(key=f"item-action-{item['id']}"):                             
+                with st.container(key=f"item-action-{item['id']}"):                            
                     if st.button(
                         action_label,
                         key=f"{action_key}-{item['id']}",
@@ -243,9 +243,9 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
                     if item["is_purchased"]
                     else f"**{item['name']}** · {item['quantity']}"
                 )
-                with st.container(key=f"item-name-{item['id']}"):                
+                with st.container(key=f"item-name-{item['id']}"):               
                     st.markdown(label)
-                with st.container(key=f"item-delete-{item['id']}"):                
+                with st.container(key=f"item-delete-{item['id']}"):               
                     if st.button(
                         "✕", key=f"delete-{item['id']}", help="Remover produto"
                     ):
@@ -317,7 +317,7 @@ def main() -> None:
         st.session_state.active_list = None
     st_autorefresh(interval=5000, key="shopping-list-refresh")
     st.title("🛒 Lista de compras")
-    #st.caption("Dados persistidos no Supabase · atualização automática a cada 5 segundos")
+    
     active_list = st.session_state.get("active_list")
     if active_list is None:
         st.session_state.active_list = get_default_list(client)
