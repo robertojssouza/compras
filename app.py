@@ -4,7 +4,6 @@ from typing import Any
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 from supabase import Client, create_client
-from supabase.lib.client_options import ClientOptions
 
 
 st.set_page_config(page_title="Lista de compras", page_icon="🛒", layout="centered")
@@ -150,12 +149,7 @@ def get_redirect_url() -> str:
 
 
 def get_supabase() -> Client:
-    options = ClientOptions(flow_type="pkce", persist_session=False)
-    return create_client(
-        setting("SUPABASE_URL"),
-        setting("SUPABASE_ANON_KEY"),
-        options=options,
-    )
+    return create_client(setting("SUPABASE_URL"), setting("SUPABASE_ANON_KEY"))
 
 
 def restore_auth_session(client: Client) -> dict[str, Any] | None:
