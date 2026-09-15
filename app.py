@@ -11,6 +11,7 @@ st.set_page_config(page_title="Lista de compras", page_icon="🛒", layout="wide
 st.markdown(
     """
     <style>
+    /* Remove o topo em branco e esconde o header nativo */
     .stAppViewContainer .main .block-container {
         padding-top: 0rem;
     }
@@ -21,7 +22,7 @@ st.markdown(
     .block-container {
         padding-top: 0rem;
     }
-    
+
     @media (max-width: 640px) {
         .stAppViewContainer .main .block-container {
             padding-top: 0 !important;
@@ -30,20 +31,13 @@ st.markdown(
             margin-top: 0 !important;
         }
     }
+
+    /* Layout da tabela de itens */
     div[data-testid="stHorizontalBlock"] {
         gap: 0.35rem;
         align-items: center;
     }
-    div[data-testid="stHorizontalBlock"]:has(input[type="checkbox"]) {
-        background: #f5f7f5;
-        border: 1px solid #dce5dc;
-        border-radius: 0;
-        padding: 0 0.2rem;
-        margin-bottom: 0;
-        margin-top: 0;
-        min-height: 0;
-        align-items: center;
-    }
+
     .st-key-items-table [data-testid="stVerticalBlock"] {
         gap: 0;
         margin: 0;
@@ -51,15 +45,17 @@ st.markdown(
     }
     .st-key-items-table [data-testid="stHorizontalBlock"] {
         margin: 0;
-        gap: 0.25rem !important;
+        gap: 0.5rem !important;
         flex-wrap: nowrap !important;
     }
     .st-key-items-table [class*="st-key-item-row-"] {
         display: flex;
         align-items: center;
-        gap: 0.25rem !important;
+        gap: 0.5rem !important;
         flex-wrap: nowrap !important;
     }
+
+    /* Distribuição dos espaços das colunas */
     .st-key-items-table [class*="st-key-item-action-"] {
         flex: 0 0 auto !important;
         width: auto !important;
@@ -70,10 +66,10 @@ st.markdown(
         width: auto !important;
     }
     .st-key-items-table [class*="st-key-item-delete-"] {
-        flex: 0 0 36px !important;
-        width: 36px !important;
+        flex: 0 0 auto !important;
         margin-left: auto !important;
     }
+
     @media (max-width: 640px) {
         .st-key-items-table [class*="st-key-item-row-"] {
             gap: 0.5rem !important;
@@ -86,42 +82,43 @@ st.markdown(
             margin: 0 !important;
         }
         .st-key-items-table [class*="st-key-item-delete-"] {
-            flex: 0 0 30px !important;
-            width: 30px !important;
+            flex: 0 0 auto !important;
             margin-left: auto !important;
+            position: relative;
+            left: 0;
         }
     }
-    .st-key-items-table [data-testid="stMarkdownContainer"] {
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
+
+    /* Permite quebra de linha sem cortar texto, nome ou quantidade */
+    .st-key-items-table [data-testid="stMarkdownContainer"],
+    .st-key-items-table [data-testid="stMarkdownContainer"] p {
+        overflow: visible !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        text-overflow: clip !important;
+        margin: 0;
+        line-height: 1.4rem;
     }
-    div[data-testid="stHorizontalBlock"]:has(input[type="checkbox"])
-    div[data-testid="column"] > div:first-child {
-        margin-top: 0;
-        margin-bottom: 0;
-    }
-    div[data-testid="stHorizontalBlock"]:has(input[type="checkbox"])
-    div[data-testid="stCheckbox"] {
-        min-height: 1.4rem;
-        padding: 0;
-    }
+
+    /* Estilos dos botões */
     .st-key-items-table [data-testid="stButton"] button {
         min-height: 1.4rem;
         padding: 0.15rem 0.45rem;
         font-size: 0.8rem;
         white-space: nowrap;
     }
+
     @media (max-width: 640px) {
         .st-key-items-table [class*="st-key-item-action-"] button {
-            padding: 0.1rem 0.2rem !important;
-            font-size: 0.7rem !important;
+            padding: 0.1rem 0.3rem !important;
+            font-size: 0.75rem !important;
         }
         .st-key-items-table [class*="st-key-item-delete-"] button {
-            padding: 0 !important;
+            padding: 0 0.2rem !important;
             font-size: 0.9rem !important;
         }
     }
+
     .st-key-items-table [class*="st-key-buy-"] button {
         color: #ffffff;
         border-color: #15803d;
@@ -136,25 +133,6 @@ st.markdown(
         color: #b42318;
         border-color: #fca5a5;
         background: #fef2f2;
-    }
-    div[data-testid="stHorizontalBlock"]:has(input[type="checkbox"]) p {
-        margin: 0;
-        line-height: 1.4rem;
-    }
-    div[data-testid="stHorizontalBlock"]:has(input[type="checkbox"])
-    div[data-testid="stMarkdownContainer"] {
-        padding: 0;
-        margin: 0;
-    }
-    div[data-testid="stHorizontalBlock"]:has(input[type="checkbox"]) button {
-        padding: 0;
-        min-height: 0;
-        height: 1.4rem;
-        border: 0;
-        background: transparent;
-        color: #b42318;
-        font-size: 1rem;
-        line-height: 1;
     }
     </style>
     """,
