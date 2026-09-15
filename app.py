@@ -11,128 +11,82 @@ st.set_page_config(page_title="Lista de compras", page_icon="🛒", layout="wide
 st.markdown(
     """
     <style>
-    /* Remove o topo em branco e esconde o header nativo */
-    .stAppViewContainer .main .block-container {
-        padding-top: 0rem;
+    /* Remove o espaço superior da página e oculta o cabeçalho nativo */
+    .stAppViewContainer .main .block-container,
+    .block-container {
+        padding-top: 0rem !important;
     }
     header {
-        visibility: hidden;
-        height: 0vh;
-    }
-    .block-container {
-        padding-top: 0rem;
+        visibility: hidden !important;
+        height: 0vh !important;
     }
 
-    @media (max-width: 640px) {
-        .stAppViewContainer .main .block-container {
-            padding-top: 0 !important;
-        }
-        .stAppViewContainer .main .block-container > div:first-child {
-            margin-top: 0 !important;
-        }
-    }
-
-    /* Layout da tabela de itens */
-    div[data-testid="stHorizontalBlock"] {
-        gap: 0.35rem;
-        align-items: center;
-    }
-
-    .st-key-items-table [data-testid="stVerticalBlock"] {
-        gap: 0;
-        margin: 0;
-        padding: 0;
-    }
-    .st-key-items-table [data-testid="stHorizontalBlock"] {
-        margin: 0;
-        gap: 0.5rem !important;
-        flex-wrap: nowrap !important;
-    }
+    /* Força linha única horizontal (evita que o botão X vá para cima no celular) */
+    .st-key-items-table [data-testid="stHorizontalBlock"],
     .st-key-items-table [class*="st-key-item-row-"] {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem !important;
+        display: flex !important;
+        flex-direction: row !important;
         flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.5rem !important;
+        width: 100% !important;
+        margin: 0 !important;
     }
 
-    /* Distribuição dos espaços das colunas */
+    /* Coluna do botão Comprar / Desfazer */
     .st-key-items-table [class*="st-key-item-action-"] {
         flex: 0 0 auto !important;
-        width: auto !important;
     }
+
+    /* Coluna do Nome + Quantidade no meio */
     .st-key-items-table [class*="st-key-item-name-"] {
         flex: 1 1 auto !important;
         min-width: 0 !important;
-        width: auto !important;
     }
+
+    /* Botão X colado na extrema direita e centralizado verticalmente */
     .st-key-items-table [class*="st-key-item-delete-"] {
         flex: 0 0 auto !important;
         margin-left: auto !important;
+        display: flex !important;
+        align-items: center !important;
     }
 
-    @media (max-width: 640px) {
-        .st-key-items-table [class*="st-key-item-row-"] {
-            gap: 0.5rem !important;
-        }
-        .st-key-items-table [class*="st-key-item-action-"] {
-            margin-right: 0 !important;
-        }
-        .st-key-items-table [class*="st-key-item-name-"] {
-            flex: 1 1 auto !important;
-            margin: 0 !important;
-        }
-        .st-key-items-table [class*="st-key-item-delete-"] {
-            flex: 0 0 auto !important;
-            margin-left: auto !important;
-            position: relative;
-            left: 0;
-        }
-    }
-
-    /* Permite quebra de linha sem cortar texto, nome ou quantidade */
+    /* Garante exibição inteira do Nome e Quantidade sem cortar */
     .st-key-items-table [data-testid="stMarkdownContainer"],
     .st-key-items-table [data-testid="stMarkdownContainer"] p {
         overflow: visible !important;
         white-space: normal !important;
         word-break: break-word !important;
-        text-overflow: clip !important;
-        margin: 0;
-        line-height: 1.4rem;
+        margin: 0 !important;
+        line-height: 1.3 !important;
     }
 
-    /* Estilos dos botões */
+    /* Configuração visual dos botões */
     .st-key-items-table [data-testid="stButton"] button {
-        min-height: 1.4rem;
-        padding: 0.15rem 0.45rem;
-        font-size: 0.8rem;
-        white-space: nowrap;
-    }
-
-    @media (max-width: 640px) {
-        .st-key-items-table [class*="st-key-item-action-"] button {
-            padding: 0.1rem 0.3rem !important;
-            font-size: 0.75rem !important;
-        }
-        .st-key-items-table [class*="st-key-item-delete-"] button {
-            padding: 0 0.2rem !important;
-            font-size: 0.9rem !important;
-        }
+        min-height: 1.5rem !important;
+        padding: 0.2rem 0.45rem !important;
+        font-size: 0.8rem !important;
+        white-space: nowrap !important;
     }
 
     .st-key-items-table [class*="st-key-buy-"] button {
-        color: #ffffff;
-        border-color: #15803d;
-        background: #16a34a;
+        color: #ffffff !important;
+        border-color: #15803d !important;
+        background: #16a34a !important;
     }
     .st-key-items-table [class*="st-key-undo-"] button {
-        color: #ffffff;
-        border-color: #c2410c;
-        background: #ea580c;
+        color: #ffffff !important;
+        border-color: #c2410c !important;
+        background: #ea580c !important;
     }
     .st-key-items-table [class*="st-key-delete-"] button {
-        color: #b42318;
-        border-color: #fca5a5;
-        background: #fef2f2;
+        color: #b42318 !important;
+        border-color: #fca5a5 !important;
+        background: #fef2f2 !important;
+        padding: 0.2rem 0.4rem !important;
+        font-size: 0.9rem !important;
     }
     </style>
     """,
@@ -168,7 +122,6 @@ def get_default_list(client: Client) -> dict[str, Any]:
 
 
 def render_items(client: Client, active_list: dict[str, Any]) -> None:
-    list_id = active_list["id"]
     st.subheader("Adicionar produto")
     with st.form("add_item", clear_on_submit=True):
         name = st.text_input("Produto", placeholder="Ex.: arroz")
@@ -216,6 +169,7 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
                             "purchased": not item["is_purchased"],
                         }).execute()
                         st.rerun()
+                
                 label = (
                     f"~~{item['name']} · {item['quantity']}~~"
                     if item["is_purchased"]
@@ -223,6 +177,7 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
                 )
                 with st.container(key=f"item-name-{item['id']}"):               
                     st.markdown(label)
+                
                 with st.container(key=f"item-delete-{item['id']}"):               
                     if st.button(
                         "✕", key=f"delete-{item['id']}", help="Remover produto"
