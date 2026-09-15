@@ -45,22 +45,23 @@ st.markdown(
         min-width: 0 !important;
     }
 
+    /* Trava NOME e QUANTIDADE na MESMA LINHA (sem quebrar para baixo) */
+    .st-key-items-table [class*="st-key-item-name-"] p,
+    .st-key-items-table [class*="st-key-item-name-"] [data-testid="stMarkdownContainer"] p {
+        white-space: nowrap !important;
+        word-break: normal !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        margin: 0 !important;
+        line-height: 1.3 !important;
+    }
+
     /* Botão X colado na extrema direita e centralizado verticalmente */
     .st-key-items-table [class*="st-key-item-delete-"] {
         flex: 0 0 auto !important;
         margin-left: auto !important;
         display: flex !important;
         align-items: center !important;
-    }
-
-    /* Garante exibição inteira do Nome e Quantidade sem cortar */
-    .st-key-items-table [data-testid="stMarkdownContainer"],
-    .st-key-items-table [data-testid="stMarkdownContainer"] p {
-        overflow: visible !important;
-        white-space: normal !important;
-        word-break: break-word !important;
-        margin: 0 !important;
-        line-height: 1.3 !important;
     }
 
     /* Configuração visual dos botões */
@@ -171,9 +172,9 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
                         st.rerun()
                 
                 label = (
-                    f"~~{item['name']} · {item['quantity']}~~"
+                    f"~~{item['name']}\u00a0·\u00a0{item['quantity']}~~"
                     if item["is_purchased"]
-                    else f"**{item['name']}** · {item['quantity']}"
+                    else f"**{item['name']}**\u00a0·\u00a0{item['quantity']}"
                 )
                 with st.container(key=f"item-name-{item['id']}"):               
                     st.markdown(label)
