@@ -18,6 +18,9 @@ st.markdown(
             visibility: hidden;
             height: 0vh;
         }
+        .block-container {
+            padding-top: 1rem;
+        }
         
     @media (max-width: 640px) {
         .stAppViewContainer .main .block-container {
