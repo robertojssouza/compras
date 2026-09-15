@@ -6,7 +6,7 @@ from streamlit_autorefresh import st_autorefresh
 from supabase import Client, create_client
 
 
-st.set_page_config(page_title="Lista de compras", page_icon="🛒", layout="centered")
+st.set_page_config(page_title="Lista de compras", page_icon="🛒", layout="wide")
 
 st.markdown(
     """
