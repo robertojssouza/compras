@@ -14,6 +14,14 @@ st.markdown(
     .stAppViewContainer .main .block-container {
         padding-top: 0.5rem;
     }
+    @media (max-width: 640px) {
+        .stAppViewContainer .main .block-container {
+            padding-top: 0 !important;
+        }
+        .stAppViewContainer .main .block-container > div:first-child {
+            margin-top: 0 !important;
+        }
+    }
     div[data-testid="stHorizontalBlock"] {
         gap: 0.35rem;
         align-items: center;
