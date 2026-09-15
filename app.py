@@ -1,4 +1,5 @@
 import os
+import re
 from typing import Any
 
 import streamlit as st
@@ -134,6 +135,14 @@ def get_supabase() -> Client:
     return create_client(setting("SUPABASE_URL"), setting("SUPABASE_ANON_KEY"))
 
 
+def username_email(username: str) -> str:
+    return f"{username.strip().lower()}@users.local"
+
+
+def normalize_username(username: str) -> str:
+    return username.strip().lower()
+
+
 def restore_auth_session(client: Client) -> dict[str, Any] | None:
     access_token = st.session_state.get("access_token")
     refresh_token = st.session_state.get("refresh_token")
@@ -142,10 +151,11 @@ def restore_auth_session(client: Client) -> dict[str, Any] | None:
 
     if not st.session_state.get("user_email"):
         return None
+    username = st.session_state.user_email.split("@", 1)[0]
     authorized = client.rpc("is_authorized_account").execute().data
     if not authorized:
-        return {"email": st.session_state.user_email, "authorized": False}
-    return {"email": st.session_state.user_email, "authorized": True}
+        return {"username": username, "authorized": False}
+    return {"username": username, "authorized": True}
 
 
 def render_login(client: Client) -> None:
@@ -156,12 +166,12 @@ def render_login(client: Client) -> None:
     login_tab, signup_tab = st.tabs(["Entrar", "Criar conta"])
     with login_tab:
         with st.form("login-form"):
-            email = st.text_input("E-mail")
+            username = st.text_input("Nome de usuário")
             password = st.text_input("Senha", type="password")
             if st.form_submit_button("Entrar", type="primary"):
                 try:
                     response = client.auth.sign_in_with_password({
-                        "email": email.strip().lower(),
+                        "email": username_email(normalize_username(username)),
                         "password": password,
                     })
                     if response.session is None or response.user is None:
@@ -175,10 +185,12 @@ def render_login(client: Client) -> None:
     with signup_tab:
         st.info(
             "Depois de criar a conta, o administrador precisa autorizar seu "
-            "e-mail antes do acesso à lista."
+            "nome de usuário antes do acesso à lista."
         )
         with st.form("signup-form"):
-            signup_email = st.text_input("E-mail", key="signup-email")
+            signup_username = st.text_input(
+                "Nome de usuário", key="signup-username"
+            )
             signup_password = st.text_input(
                 "Senha (mínimo de 6 caracteres)",
                 type="password",
@@ -188,14 +200,21 @@ def render_login(client: Client) -> None:
                 "Repetir senha", type="password", key="signup-confirmation"
             )
             if st.form_submit_button("Criar conta"):
-                if signup_password != signup_confirmation:
+                normalized_username = normalize_username(signup_username)
+                if not re.fullmatch(r"[a-z0-9][a-z0-9._-]{2,29}", normalized_username):
+                    st.error(
+                        "Use apenas letras, números, ponto, hífen ou sublinhado."
+                    )
+                elif len(normalized_username) < 3 or len(normalized_username) > 30:
+                    st.error("O nome de usuário deve ter entre 3 e 30 caracteres.")
+                elif signup_password != signup_confirmation:
                     st.error("As senhas não coincidem.")
                 elif len(signup_password) < 6:
                     st.error("A senha precisa ter pelo menos 6 caracteres.")
                 else:
                     try:
                         response = client.auth.sign_up({
-                            "email": signup_email.strip().lower(),
+                            "email": username_email(normalized_username),
                             "password": signup_password,
                         })
                         if response.session:
@@ -214,7 +233,7 @@ def render_login(client: Client) -> None:
 def render_account_blocked(email: str) -> None:
     st.title("Acesso pendente")
     st.warning(
-        f"A conta `{email}` ainda não foi autorizada pelo administrador."
+        f"O usuário `{email}` ainda não foi autorizado pelo administrador."
     )
     st.info("Peça ao administrador para adicionar seu e-mail ao sistema.")
     if st.button("Sair", key="blocked-logout"):
@@ -222,8 +241,8 @@ def render_account_blocked(email: str) -> None:
         st.rerun()
 
 
-def render_user_bar(client: Client, email: str) -> None:
-    st.caption(f"Conectado como {email}")
+def render_user_bar(client: Client, username: str) -> None:
+    st.caption(f"Conectado como {username}")
     if st.button("Sair", key="logout"):
         client.auth.sign_out()
         st.session_state.clear()
@@ -331,7 +350,7 @@ def render_admin(client: Client) -> None:
     with account_tab:
         st.write("Somente e-mails cadastrados e ativos podem usar o sistema.")
         with st.form("add-authorized-account", clear_on_submit=True):
-            account_email = st.text_input("E-mail da conta")
+            account_username = st.text_input("Nome de usuário")
             account_note = st.text_input("Observação (opcional)")
             if st.form_submit_button("Adicionar conta"):
                 try:
@@ -339,7 +358,7 @@ def render_admin(client: Client) -> None:
                         "add_authorized_account",
                         {
                             "p_admin_code": admin_code,
-                            "account_email": account_email,
+                            "account_username": account_username,
                             "account_note": account_note,
                         },
                     ).execute()
@@ -350,7 +369,7 @@ def render_admin(client: Client) -> None:
 
         for account in st.session_state.admin_accounts:
             state = "Ativa" if account["active"] else "Inativa"
-            st.write(f"**{account['email']}** · {state}")
+            st.write(f"**{account['username']}** · {state}")
             if account.get("note"):
                 st.caption(account["note"])
             action = "Desativar" if account["active"] else "Ativar"
@@ -424,7 +443,7 @@ def main() -> None:
         render_login(client)
         return
     if not user["authorized"]:
-        render_account_blocked(user["email"])
+        render_account_blocked(user["username"])
         return
 
     if "active_list" not in st.session_state:
@@ -432,7 +451,7 @@ def main() -> None:
     st_autorefresh(interval=5000, key="shopping-list-refresh")
     st.title("🛒 Lista de compras")
     st.caption("Dados persistidos no Supabase · atualização automática a cada 5 segundos")
-    render_user_bar(client, user["email"])
+    render_user_bar(client, user["username"])
     active_list = st.session_state.get("active_list")
     if active_list is None:
         st.session_state.active_list = get_default_list(client)
