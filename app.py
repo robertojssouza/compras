@@ -21,42 +21,43 @@ st.markdown(
         height: 0vh !important;
     }
 
-    /* Força linha única horizontal (evita que o botão X vá para cima no celular) */
+    /* Trava a linha horizontal sem permitir que os botões quebrem de posição */
     .st-key-items-table [data-testid="stHorizontalBlock"],
     .st-key-items-table [class*="st-key-item-row-"] {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
         align-items: center !important;
-        justify-content: flex-start !important;
+        justify-content: space-between !important;
         gap: 0.5rem !important;
         width: 100% !important;
         margin: 0 !important;
     }
 
-    /* Coluna do botão Comprar / Desfazer */
+    /* Botão Comprar / Desfazer fixo à esquerda */
     .st-key-items-table [class*="st-key-item-action-"] {
         flex: 0 0 auto !important;
     }
 
-    /* Coluna do Nome + Quantidade no meio */
+    /* ÁREA DO NOME + QUANTIDADE: flexível no meio */
     .st-key-items-table [class*="st-key-item-name-"] {
         flex: 1 1 auto !important;
         min-width: 0 !important;
     }
 
-    /* Trava NOME e QUANTIDADE na MESMA LINHA (sem quebrar para baixo) */
+    /* Permite quebrar linha para NÃO CORTAR o nome nem a quantidade e NUNCA usar '...' */
     .st-key-items-table [class*="st-key-item-name-"] p,
     .st-key-items-table [class*="st-key-item-name-"] [data-testid="stMarkdownContainer"] p {
-        white-space: nowrap !important;
-        word-break: normal !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
         margin: 0 !important;
         line-height: 1.3 !important;
+        font-size: 0.95rem !important;
     }
 
-    /* Botão X colado na extrema direita e centralizado verticalmente */
+    /* Botão X colado na extrema direita */
     .st-key-items-table [class*="st-key-item-delete-"] {
         flex: 0 0 auto !important;
         margin-left: auto !important;
@@ -64,7 +65,7 @@ st.markdown(
         align-items: center !important;
     }
 
-    /* Configuração visual dos botões */
+    /* Estilização dos botões */
     .st-key-items-table [data-testid="stButton"] button {
         min-height: 1.5rem !important;
         padding: 0.2rem 0.45rem !important;
@@ -172,9 +173,9 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
                         st.rerun()
                 
                 label = (
-                    f"~~{item['name']}\u00a0·\u00a0{item['quantity']}~~"
+                    f"~~{item['name']} · {item['quantity']}~~"
                     if item["is_purchased"]
-                    else f"**{item['name']}**\u00a0·\u00a0{item['quantity']}"
+                    else f"**{item['name']}** · {item['quantity']}"
                 )
                 with st.container(key=f"item-name-{item['id']}"):               
                     st.markdown(label)
