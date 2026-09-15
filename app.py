@@ -11,6 +11,9 @@ st.set_page_config(page_title="Lista de compras", page_icon="🛒", layout="cent
 st.markdown(
     """
     <style>
+    .stAppViewContainer .main .block-container {
+        padding-top: 0.5rem;
+    }
     div[data-testid="stHorizontalBlock"] {
         gap: 0.35rem;
         align-items: center;
