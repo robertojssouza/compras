@@ -70,7 +70,7 @@ st.markdown(
         width: auto !important;
     }
     .st-key-items-table [class*="st-key-item-delete-"] {
-        flex: 0 0 36px !important;
+        flex: 2 0 36px !important;
         width: 36px !important;
     }
     @media (max-width: 640px) {
