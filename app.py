@@ -1,4 +1,5 @@
 import os
+from html import escape
 from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
@@ -223,7 +224,25 @@ def render_login(client: Client) -> None:
         "code_challenge": challenge,
         "code_challenge_method": "s256",
     })
-    st.link_button("Entrar com Google", oauth_url, type="primary")
+    st.markdown(
+        f"""
+        <a href="{escape(oauth_url, quote=True)}" target="_self" class="login-button">
+            Entrar com Google
+        </a>
+        <style>
+        .login-button {{
+            display: inline-block;
+            padding: 0.45rem 0.9rem;
+            border-radius: 0.4rem;
+            background: #ff4b4b;
+            color: white !important;
+            font-weight: 600;
+            text-decoration: none;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def render_account_blocked(email: str) -> None:
