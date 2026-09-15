@@ -226,9 +226,7 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
             ):
                 action_label = "Desfazer" if item["is_purchased"] else "Comprar"
                 action_key = "undo" if item["is_purchased"] else "buy"
-                #with st.container(key=f"item-action-{item['id']}"):
-                col_compra, col_texto, col_deletar = st.columns([2, 6, 1], vertical_alignment="center")
-                with col_compra(key=f"item-action-{item['id']}"):
+                with st.container(key=f"item-action-{item['id']}"):                             
                     if st.button(
                         action_label,
                         key=f"{action_key}-{item['id']}",
@@ -245,11 +243,9 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
                     if item["is_purchased"]
                     else f"**{item['name']}** · {item['quantity']}"
                 )
-                #with st.container(key=f"item-name-{item['id']}"):
-                with col_texto(key=f"item-name-{item['id']}"):
+                with st.container(key=f"item-name-{item['id']}"):                
                     st.markdown(label)
-                #with st.container(key=f"item-delete-{item['id']}"):
-                with col_deletar(key=f"item-delete-{item['id']}"):
+                with st.container(key=f"item-delete-{item['id']}"):                
                     if st.button(
                         "✕", key=f"delete-{item['id']}", help="Remover produto"
                     ):
