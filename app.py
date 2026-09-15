@@ -11,7 +11,7 @@ st.set_page_config(page_title="Lista de compras", page_icon="🛒", layout="wide
 st.markdown(
     """
     <style>
-    /* Remove o topo em branco e oculta o cabeçalho nativo */
+    /* Remove topo em branco e esconde o cabeçalho nativo do Streamlit */
     .stAppViewContainer .main .block-container,
     .block-container {
         padding-top: 0rem !important;
@@ -21,70 +21,47 @@ st.markdown(
         height: 0vh !important;
     }
 
-    /* Trava a linha em uma única fila horizontal (evita que o botão X suba no celular) */
-    .st-key-items-table [data-testid="stHorizontalBlock"],
-    .st-key-items-table [class*="st-key-item-row-"] {
+    /* Impede que as colunas empilhem na vertical no celular */
+    .st-key-items-table [data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
         align-items: center !important;
         justify-content: space-between !important;
-        width: 100% !important;
         gap: 0.4rem !important;
-        margin: 0 !important;
-    }
-
-    /* 1. Botão Comprar / Desfazer (Esquerda) */
-    .st-key-items-table [class*="st-key-item-action-"] {
-        flex: 0 0 auto !important;
-    }
-
-    /* 2. Container do Texto (Centro) */
-    .st-key-items-table [class*="st-key-item-name-"] {
-        flex: 1 1 auto !important;
-        min-width: 0 !important;
-        overflow: hidden !important;
-    }
-
-    /* Layout interno para Nome + Quantidade na mesma linha */
-    .item-label-container {
-        display: flex !important;
-        align-items: center !important;
-        gap: 0.3rem !important;
         width: 100% !important;
-        overflow: hidden !important;
-        white-space: nowrap !important;
     }
 
-    /* O nome encurta com '...' se for muito grande para a tela */
-    .item-name-text {
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
-        flex: 0 1 auto !important;
+    /* Libera o corte vertical e remove margens internas dos parágrafos */
+    .st-key-items-table [data-testid="stColumn"] {
         min-width: 0 !important;
-        font-size: 0.95rem;
+        overflow: visible !important;
     }
 
-    /* A quantidade NUNCA corta, NUNCA some e fica SEMPRE colada no nome */
-    .item-qty-text {
-        flex: 0 0 auto !important;
-        white-space: nowrap !important;
-        color: #4b5563;
-        font-size: 0.88rem;
+    .st-key-items-table p,
+    .st-key-items-table [data-testid="stMarkdownContainer"] {
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1.35 !important;
+        overflow: visible !important;
+        word-break: break-word !important;
     }
 
-    /* 3. Botão X (Fixado no canto direito) */
-    .st-key-items-table [class*="st-key-item-delete-"] {
+    /* Coluna central do texto cresce para ocupar o espaço */
+    .st-key-items-table [data-testid="stColumn"]:nth-child(2) {
+        flex: 1 1 auto !important;
+    }
+
+    /* Coluna do botão X fixada à extrema direita */
+    .st-key-items-table [data-testid="stColumn"]:nth-child(3) {
         flex: 0 0 auto !important;
-        margin-left: auto !important;
         display: flex !important;
-        align-items: center !important;
+        justify-content: flex-end !important;
     }
 
     /* Estilização dos botões */
     .st-key-items-table [data-testid="stButton"] button {
-        min-height: 1.5rem !important;
+        min-height: 1.6rem !important;
         padding: 0.2rem 0.45rem !important;
         font-size: 0.8rem !important;
         white-space: nowrap !important;
@@ -165,51 +142,44 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
     if not items:
         st.info("A lista está vazia.")
         return
+
     with st.container(key="items-table"):
         for item in items:
-            with st.container(
-                horizontal=True,
-                horizontal_alignment="left",
-                vertical_alignment="center",
-                gap="small",
-                key=f"item-row-{item['id']}",
-            ):
+            col_act, col_txt, col_del = st.columns(
+                [1.1, 3.8, 0.6], vertical_alignment="center"
+            )
+            
+            with col_act:
                 action_label = "Desfazer" if item["is_purchased"] else "Comprar"
                 action_key = "undo" if item["is_purchased"] else "buy"
-                with st.container(key=f"item-action-{item['id']}"):                            
-                    if st.button(
-                        action_label,
-                        key=f"{action_key}-{item['id']}",
-                        help="Alterar status do produto",
-                    ):
-                        client.rpc("set_shopping_item_purchased", {
-                            "code": active_list["invite_code"],
-                            "item_id": item["id"],
-                            "purchased": not item["is_purchased"],
-                        }).execute()
-                        st.rerun()
-                
-                # Monta o HTML flexível: Nome encurta se preciso, Quantidade SEMPRE visível ao lado
-                name_style = "text-decoration: line-through; opacity: 0.6;" if item["is_purchased"] else "font-weight: 600;"
-                label_html = f"""
-                <div class="item-label-container">
-                    <span class="item-name-text" style="{name_style}">{item['name']}</span>
-                    <span class="item-qty-text">· {item['quantity']}</span>
-                </div>
-                """
-                
-                with st.container(key=f"item-name-{item['id']}"):               
-                    st.markdown(label_html, unsafe_allow_html=True)
-                
-                with st.container(key=f"item-delete-{item['id']}"):               
-                    if st.button(
-                        "✕", key=f"delete-{item['id']}", help="Remover produto"
-                    ):
-                        client.rpc("delete_shopping_item", {
-                            "code": active_list["invite_code"],
-                            "item_id": item["id"],
-                        }).execute()
-                        st.rerun()
+                if st.button(
+                    action_label,
+                    key=f"{action_key}-{item['id']}",
+                    help="Alterar status do produto",
+                ):
+                    client.rpc("set_shopping_item_purchased", {
+                        "code": active_list["invite_code"],
+                        "item_id": item["id"],
+                        "purchased": not item["is_purchased"],
+                    }).execute()
+                    st.rerun()
+
+            with col_txt:
+                if item["is_purchased"]:
+                    label_html = f"<span style='text-decoration: line-through; opacity: 0.6;'>{item['name']}</span> <span style='opacity: 0.65;'>· {item['quantity']}</span>"
+                else:
+                    label_html = f"<strong>{item['name']}</strong> · {item['quantity']}"
+                st.markdown(label_html, unsafe_allow_html=True)
+
+            with col_del:
+                if st.button(
+                    "✕", key=f"delete-{item['id']}", help="Remover produto"
+                ):
+                    client.rpc("delete_shopping_item", {
+                        "code": active_list["invite_code"],
+                        "item_id": item["id"],
+                    }).execute()
+                    st.rerun()
 
 
 def render_admin(client: Client) -> None:
