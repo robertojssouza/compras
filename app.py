@@ -54,6 +54,26 @@ st.markdown(
         flex: 0 0 36px !important;
         width: 36px !important;
     }
+    @media (max-width: 640px) {
+        .st-key-items-table [class*="st-key-item-row-"] {
+            gap: 0 !important;
+        }
+        .st-key-items-table [class*="st-key-item-action-"] {
+            margin-right: 0 !important;
+        }
+        .st-key-items-table [class*="st-key-item-name-"] {
+            flex: 1 1 0 !important;
+            margin: 0 !important;
+        }
+        .st-key-items-table [class*="st-key-item-delete-"] {
+            flex: 0 0 30px !important;
+            width: 30px !important;
+        }
+        .st-key-items-table [data-testid="stButton"] button {
+            padding-left: 0.3rem;
+            padding-right: 0.3rem;
+        }
+    }
     .st-key-items-table [data-testid="stMarkdownContainer"] {
         overflow: hidden;
         white-space: nowrap;
