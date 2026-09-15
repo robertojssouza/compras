@@ -19,7 +19,7 @@ st.markdown(
             height: 0vh;
         }
         .block-container {
-            padding-top: 1rem;
+            padding-top: 0.2rem;
         }
         
     @media (max-width: 640px) {
