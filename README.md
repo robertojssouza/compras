@@ -42,8 +42,9 @@ Antes da primeira execução do SQL, altere `CHANGE-ME-BEFORE-RUN` para um códi
 3. Use como callback autorizado a URL exibida pelo Supabase em **Authentication > URL Configuration**, normalmente:
    `https://SEU-PROJETO.supabase.co/auth/v1/callback`.
 4. Cadastre o Client ID e o Client Secret no provedor Google do Supabase.
-5. Em **Authentication > URL Configuration**, adicione também a URL do app Streamlit em **Redirect URLs**.
-6. Configure `SUPABASE_REDIRECT_URL` com essa mesma URL no Streamlit Cloud e localmente.
+5. Em **Authentication > URL Configuration**, adicione também a URL do app Streamlit em **Redirect URLs**. Como o fluxo PKCE transporta um parâmetro temporário na URL, use o padrão:
+   `https://SEU-APP.streamlit.app/**`
+6. Configure `SUPABASE_REDIRECT_URL` com a URL base do app no Streamlit Cloud e localmente.
 
 Depois de executar o SQL e configurar o primeiro e-mail, abra o app, entre com a conta Google autorizada e use a aba **Administração** com o código administrativo.
 

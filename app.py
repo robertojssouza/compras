@@ -1,9 +1,11 @@
 import os
 from typing import Any
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 from supabase import Client, create_client
+from supabase_auth.helpers import generate_pkce_challenge, generate_pkce_verifier
 
 
 st.set_page_config(page_title="Lista de compras", page_icon="🛒", layout="centered")
@@ -148,6 +150,22 @@ def get_redirect_url() -> str:
     return "http://localhost:8501"
 
 
+def get_oauth_redirect_url(verifier: str | None = None) -> str:
+    redirect_url = get_redirect_url()
+    if not verifier:
+        return redirect_url
+    parts = urlsplit(redirect_url)
+    query = dict(parse_qsl(parts.query, keep_blank_values=True))
+    query["oauth_verifier"] = verifier
+    return urlunsplit((
+        parts.scheme,
+        parts.netloc,
+        parts.path,
+        urlencode(query),
+        parts.fragment,
+    ))
+
+
 def get_supabase() -> Client:
     return create_client(setting("SUPABASE_URL"), setting("SUPABASE_ANON_KEY"))
 
@@ -160,7 +178,7 @@ def restore_auth_session(client: Client) -> dict[str, Any] | None:
 
     auth_code = st.query_params.get("code")
     if auth_code:
-        code_verifier = st.session_state.get("oauth_code_verifier")
+        code_verifier = st.query_params.get("oauth_verifier")
         if not code_verifier:
             st.query_params.clear()
             st.session_state.auth_error = (
@@ -168,12 +186,10 @@ def restore_auth_session(client: Client) -> dict[str, Any] | None:
                 "Clique novamente em Entrar com Google."
             )
             st.rerun()
-        client.auth._storage.set_item(
-            f"{client.auth._storage_key}-code-verifier", code_verifier
-        )
         response = client.auth.exchange_code_for_session({
             "auth_code": auth_code,
-            "redirect_to": get_redirect_url(),
+            "code_verifier": code_verifier,
+            "redirect_to": get_oauth_redirect_url(code_verifier),
         })
         if response.session is None or response.user is None:
             raise RuntimeError("Não foi possível concluir o login Google.")
@@ -198,15 +214,16 @@ def render_login(client: Client) -> None:
     if auth_error:
         st.warning(auth_error)
     st.write("Use sua conta Google para acessar a lista compartilhada.")
-    redirect_url = get_redirect_url()
-    response = client.auth.sign_in_with_oauth({
+    verifier = generate_pkce_verifier()
+    challenge = generate_pkce_challenge(verifier)
+    redirect_url = get_oauth_redirect_url(verifier)
+    oauth_url = f"{client.auth._url}/authorize?" + urlencode({
         "provider": "google",
-        "options": {"redirect_to": redirect_url},
+        "redirect_to": redirect_url,
+        "code_challenge": challenge,
+        "code_challenge_method": "s256",
     })
-    st.session_state.oauth_code_verifier = client.auth._storage.get_item(
-        f"{client.auth._storage_key}-code-verifier"
-    )
-    st.link_button("Entrar com Google", response.url, type="primary")
+    st.link_button("Entrar com Google", oauth_url, type="primary")
 
 
 def render_account_blocked(email: str) -> None:
