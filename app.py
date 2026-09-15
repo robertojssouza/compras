@@ -4,6 +4,7 @@ from typing import Any
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 from supabase import Client, create_client
+from supabase.lib.client_options import ClientOptions
 
 
 st.set_page_config(page_title="Lista de compras", page_icon="🛒", layout="centered")
@@ -149,7 +150,12 @@ def get_redirect_url() -> str:
 
 
 def get_supabase() -> Client:
-    return create_client(setting("SUPABASE_URL"), setting("SUPABASE_ANON_KEY"))
+    options = ClientOptions(flow_type="pkce", persist_session=False)
+    return create_client(
+        setting("SUPABASE_URL"),
+        setting("SUPABASE_ANON_KEY"),
+        options=options,
+    )
 
 
 def restore_auth_session(client: Client) -> dict[str, Any] | None:
@@ -161,10 +167,16 @@ def restore_auth_session(client: Client) -> dict[str, Any] | None:
     auth_code = st.query_params.get("code")
     if auth_code:
         code_verifier = st.session_state.get("oauth_code_verifier")
-        if code_verifier:
-            client.auth._storage.set_item(
-                f"{client.auth._storage_key}-code-verifier", code_verifier
+        if not code_verifier:
+            st.query_params.clear()
+            st.session_state.auth_error = (
+                "A sessão de login expirou antes de ser concluída. "
+                "Clique novamente em Entrar com Google."
             )
+            st.rerun()
+        client.auth._storage.set_item(
+            f"{client.auth._storage_key}-code-verifier", code_verifier
+        )
         response = client.auth.exchange_code_for_session({
             "auth_code": auth_code,
             "redirect_to": get_redirect_url(),
@@ -188,6 +200,9 @@ def restore_auth_session(client: Client) -> dict[str, Any] | None:
 def render_login(client: Client) -> None:
     st.title("🛒 Lista de compras")
     st.subheader("Entrar")
+    auth_error = st.session_state.pop("auth_error", None)
+    if auth_error:
+        st.warning(auth_error)
     st.write("Use sua conta Google para acessar a lista compartilhada.")
     redirect_url = get_redirect_url()
     response = client.auth.sign_in_with_oauth({
