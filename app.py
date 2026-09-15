@@ -6,7 +6,6 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 from supabase import Client, create_client
-from supabase_auth.helpers import generate_pkce_challenge, generate_pkce_verifier
 
 
 st.set_page_config(page_title="Lista de compras", page_icon="🛒", layout="centered")
@@ -167,6 +166,20 @@ def get_oauth_redirect_url(verifier: str | None = None) -> str:
     ))
 
 
+def add_verifier_to_oauth_url(oauth_url: str, verifier: str) -> str:
+    parts = urlsplit(oauth_url)
+    query = dict(parse_qsl(parts.query, keep_blank_values=True))
+    redirect_url = get_oauth_redirect_url(verifier)
+    query["redirect_to"] = redirect_url
+    return urlunsplit((
+        parts.scheme,
+        parts.netloc,
+        parts.path,
+        urlencode(query),
+        parts.fragment,
+    ))
+
+
 def get_supabase() -> Client:
     return create_client(setting("SUPABASE_URL"), setting("SUPABASE_ANON_KEY"))
 
@@ -215,15 +228,16 @@ def render_login(client: Client) -> None:
     if auth_error:
         st.warning(auth_error)
     st.write("Use sua conta Google para acessar a lista compartilhada.")
-    verifier = generate_pkce_verifier()
-    challenge = generate_pkce_challenge(verifier)
-    redirect_url = get_oauth_redirect_url(verifier)
-    oauth_url = f"{client.auth._url}/authorize?" + urlencode({
+    response = client.auth.sign_in_with_oauth({
         "provider": "google",
-        "redirect_to": redirect_url,
-        "code_challenge": challenge,
-        "code_challenge_method": "s256",
+        "options": {"redirect_to": get_redirect_url()},
     })
+    verifier = client.auth._storage.get_item(
+        f"{client.auth._storage_key}-code-verifier"
+    )
+    if not verifier:
+        raise RuntimeError("Não foi possível preparar o login Google.")
+    oauth_url = add_verifier_to_oauth_url(response.url, verifier)
     st.markdown(
         f"""
         <a href="{escape(oauth_url, quote=True)}" target="_self" class="login-button">
