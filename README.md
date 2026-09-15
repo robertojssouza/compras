@@ -1,6 +1,6 @@
 # Lista de compras colaborativa
 
-Aplicação em Python/Streamlit com dados persistentes no Supabase PostgreSQL. O app usa uma única lista compartilhada, carregada automaticamente, com login por nome de usuário e senha e usuários autorizados pelo administrador.
+Aplicação em Python/Streamlit com dados persistentes no Supabase PostgreSQL. O app usa uma única lista compartilhada, carregada automaticamente, sem exigir login, nome ou código de convite.
 
 ## Configuração local
 
@@ -26,26 +26,13 @@ streamlit run app.py
 
 Execute o conteúdo de [`schema.sql`](./schema.sql) em **Supabase > SQL Editor > New query**. Se você já executou uma versão anterior, execute o arquivo novamente para atualizar as funções e bloquear o acesso direto às tabelas.
 
-O app usa funções RPC que validam a sessão do Supabase Auth e a conta autorizada. As tabelas não ficam expostas diretamente ao cliente.
+O app usa funções RPC que recebem o código da lista. As tabelas não ficam expostas diretamente ao cliente.
 
 O app cria a lista padrão automaticamente apenas se ainda não existir. Não há opção de criar ou trocar de lista na interface.
 
 Se aparecer o erro `PGRST202` mencionando `get_default_shopping_list`, execute novamente o `schema.sql` atualizado no SQL Editor do Supabase e use **Reboot app** no Streamlit Cloud.
 
-Antes da primeira execução do SQL, altere `CHANGE-ME-BEFORE-RUN` para um código administrativo secreto e substitua o usuário inicial no `schema.sql`. O código permite abrir a aba **Administração**, onde é possível adicionar, ativar, desativar e remover usuários autorizados, além de visualizar e excluir listas.
-
-## Configurar o login direto
-
-No Supabase, abra **Authentication → Sign In / Providers → Email** e mantenha o provedor de e-mail ativado. Como o app usa um identificador interno (`nome@users.local`), desative **Confirm email** em **Authentication → Configuration → Sign In / Providers → Email**.
-
-Para cadastrar o administrador inicial:
-
-1. Execute o `schema.sql` com o nome de usuário inicial definido na inserção de `authorized_accounts`.
-2. Abra a aba **Criar conta** no app.
-3. Cadastre esse mesmo nome de usuário e defina uma senha.
-4. Entre com o usuário criado e abra **Administração** usando o código administrativo configurado no SQL.
-
-Os demais usuários também podem ser criados pela aba **Criar conta**, mas precisam ser autorizados pelo administrador na aba **Administração** antes de acessar a lista.
+Na primeira execução do SQL, altere `CHANGE-ME-BEFORE-RUN` para um código administrativo secreto antes de clicar em **Run**. Esse código aparece no painel **Administração de listas** do app e permite visualizar e excluir listas. A exclusão remove também todos os produtos da lista.
 
 ## Publicar no Streamlit Community Cloud
 
