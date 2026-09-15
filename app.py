@@ -69,10 +69,6 @@ st.markdown(
             flex: 0 0 30px !important;
             width: 30px !important;
         }
-        .st-key-items-table [data-testid="stButton"] button {
-            padding-left: 0.3rem;
-            padding-right: 0.3rem;
-        }
     }
     .st-key-items-table [data-testid="stMarkdownContainer"] {
         overflow: hidden;
@@ -94,6 +90,16 @@ st.markdown(
         padding: 0.15rem 0.45rem;
         font-size: 0.8rem;
         white-space: nowrap;
+    }
+    @media (max-width: 640px) {
+        .st-key-items-table [class*="st-key-item-action-"] button {
+            padding: 0.1rem 0.2rem !important;
+            font-size: 0.7rem !important;
+        }
+        .st-key-items-table [class*="st-key-item-delete-"] button {
+            padding: 0 !important;
+            font-size: 0.9rem !important;
+        }
     }
     .st-key-items-table [class*="st-key-buy-"] button {
         color: #ffffff;
