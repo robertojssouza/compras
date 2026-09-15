@@ -26,6 +26,14 @@ streamlit run app.py
 
 Execute o conteúdo de [`schema.sql`](./schema.sql) em **Supabase > SQL Editor > New query**. Se você já executou uma versão anterior, execute o arquivo novamente para atualizar as funções e bloquear o acesso direto às tabelas.
 
+**Importante após remover a autenticação:** se aparecer `Conta não autorizada`, o banco ainda está usando as RPCs antigas. Execute novamente todo o `schema.sql` no SQL Editor, clique em **Run** e depois execute:
+
+```sql
+notify pgrst, 'reload schema';
+```
+
+Por fim, use **Reboot app** no Streamlit Cloud. Isso atualiza as funções do banco para aceitar contribuições sem login.
+
 O app usa funções RPC que recebem o código da lista. As tabelas não ficam expostas diretamente ao cliente.
 
 O app cria a lista padrão automaticamente apenas se ainda não existir. Não há opção de criar ou trocar de lista na interface.
