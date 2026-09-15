@@ -36,7 +36,16 @@ Antes da primeira execução do SQL, altere `CHANGE-ME-BEFORE-RUN` para um códi
 
 ## Configurar o login direto
 
-No Supabase, abra **Authentication → Sign In / Providers → Email** e mantenha o provedor de e-mail ativado. Como o app usa um identificador interno (`nome@users.local`), desative **Confirm email** em **Authentication → Configuration → Sign In / Providers → Email**. O app oferece as abas **Entrar** e **Criar conta**; o usuário informa apenas nome e senha. Após o cadastro, o administrador precisa autorizar o nome de usuário na aba **Administração** antes que a pessoa consiga usar a lista.
+No Supabase, abra **Authentication → Sign In / Providers → Email** e mantenha o provedor de e-mail ativado. Como o app usa um identificador interno (`nome@users.local`), desative **Confirm email** em **Authentication → Configuration → Sign In / Providers → Email**.
+
+Para cadastrar o administrador inicial:
+
+1. Execute o `schema.sql` com o nome de usuário inicial definido na inserção de `authorized_accounts`.
+2. Abra a aba **Criar conta** no app.
+3. Cadastre esse mesmo nome de usuário e defina uma senha.
+4. Entre com o usuário criado e abra **Administração** usando o código administrativo configurado no SQL.
+
+Os demais usuários também podem ser criados pela aba **Criar conta**, mas precisam ser autorizados pelo administrador na aba **Administração** antes de acessar a lista.
 
 ## Publicar no Streamlit Community Cloud
 

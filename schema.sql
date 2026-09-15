@@ -29,18 +29,32 @@ create table if not exists public.app_settings (
 create table if not exists public.authorized_accounts (
   id uuid primary key default gen_random_uuid(),
   email text not null unique check (email = lower(trim(email))),
+  username text,
   active boolean not null default true,
   note text,
   created_at timestamptz not null default now()
 );
+
+alter table public.authorized_accounts
+  add column if not exists username text;
+update public.authorized_accounts
+set username = lower(split_part(email, '@', 1))
+where username is null;
+create unique index if not exists authorized_accounts_username_idx
+  on public.authorized_accounts(username)
+  where username is not null;
 
 insert into public.app_settings (id, admin_code)
 values (true, 'CHANGE-ME-BEFORE-RUN')
 on conflict (id) do nothing;
 
 -- Substitua o e-mail abaixo pelo primeiro administrador antes de executar.
-insert into public.authorized_accounts (email, note)
-values ('first-admin@example.com', 'Substitua este e-mail pelo primeiro administrador')
+insert into public.authorized_accounts (email, username, note)
+values (
+  'first-admin@example.com',
+  lower(split_part('first-admin@example.com', '@', 1)),
+  'Substitua este nome pelo primeiro usuário'
+)
 on conflict (email) do nothing;
 
 alter table public.shopping_lists enable row level security;
@@ -64,7 +78,9 @@ as $$
   select exists (
     select 1
     from public.authorized_accounts
-    where email = lower(trim(coalesce(auth.jwt() ->> 'email', '')))
+    where username = lower(split_part(
+      trim(coalesce(auth.jwt() ->> 'email', '')), '@', 1
+    ))
       and active
   )
 $$;
@@ -258,12 +274,12 @@ begin
   if not exists (select 1 from public.app_settings where admin_code = p_admin_code) then
     raise exception 'Código administrativo inválido';
   end if;
-  return query select * from public.authorized_accounts order by email;
+  return query select * from public.authorized_accounts order by username;
 end;
 $$;
 
 create or replace function public.add_authorized_account(
-  p_admin_code text, account_email text, account_note text default null
+  p_admin_code text, account_username text, account_note text default null
 )
 returns public.authorized_accounts
 language plpgsql
@@ -272,17 +288,21 @@ set search_path = public
 as $$
 declare
   new_account public.authorized_accounts;
-  normalized_email text := lower(trim(account_email));
+  normalized_username text := lower(trim(account_username));
 begin
   perform public.require_authorized_account();
   if not exists (select 1 from public.app_settings where admin_code = p_admin_code) then
     raise exception 'Código administrativo inválido';
   end if;
-  if normalized_email !~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$' then
-    raise exception 'E-mail inválido';
+  if normalized_username !~ '^[a-z0-9][a-z0-9._-]{2,29}$' then
+    raise exception 'Nome de usuário inválido';
   end if;
-  insert into public.authorized_accounts (email, note)
-  values (normalized_email, nullif(trim(account_note), ''))
+  insert into public.authorized_accounts (email, username, note)
+  values (
+    normalized_username || '@users.local',
+    normalized_username,
+    nullif(trim(account_note), '')
+  )
   returning * into new_account;
   return new_account;
 exception

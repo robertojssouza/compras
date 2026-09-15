@@ -184,8 +184,9 @@ def render_login(client: Client) -> None:
                     st.error(f"Não foi possível entrar: {error}")
     with signup_tab:
         st.info(
-            "Depois de criar a conta, o administrador precisa autorizar seu "
-            "nome de usuário antes do acesso à lista."
+            "Para cadastrar o primeiro administrador, use aqui o nome de usuário "
+            "definido no schema.sql. Os demais usuários precisam ser autorizados "
+            "pelo administrador antes do acesso à lista."
         )
         with st.form("signup-form"):
             signup_username = st.text_input(
@@ -219,7 +220,9 @@ def render_login(client: Client) -> None:
                         })
                         if response.session:
                             st.info(
-                                "Conta criada. Aguarde a autorização do administrador."
+                                "Usuário criado. Se ele estiver definido como "
+                                "administrador inicial no banco, o acesso já está "
+                                "liberado; caso contrário, aguarde autorização."
                             )
                         else:
                             st.success(
