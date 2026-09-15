@@ -130,6 +130,24 @@ def setting(name: str) -> str:
     return str(value)
 
 
+def get_redirect_url() -> str:
+    configured_url = os.getenv("SUPABASE_REDIRECT_URL", "")
+    if not configured_url:
+        try:
+            configured_url = str(st.secrets.get("SUPABASE_REDIRECT_URL", ""))
+        except FileNotFoundError:
+            configured_url = ""
+    if configured_url:
+        return configured_url.rstrip("/")
+
+    headers = st.context.headers
+    host = headers.get("X-Forwarded-Host") or headers.get("Host")
+    if host:
+        protocol = headers.get("X-Forwarded-Proto", "https").split(",")[0].strip()
+        return f"{protocol}://{host}".rstrip("/")
+    return "http://localhost:8501"
+
+
 def get_supabase() -> Client:
     return create_client(setting("SUPABASE_URL"), setting("SUPABASE_ANON_KEY"))
 
@@ -149,7 +167,7 @@ def restore_auth_session(client: Client) -> dict[str, Any] | None:
             )
         response = client.auth.exchange_code_for_session({
             "auth_code": auth_code,
-            "redirect_to": setting("SUPABASE_REDIRECT_URL"),
+            "redirect_to": get_redirect_url(),
         })
         if response.session is None or response.user is None:
             raise RuntimeError("Não foi possível concluir o login Google.")
@@ -171,7 +189,7 @@ def render_login(client: Client) -> None:
     st.title("🛒 Lista de compras")
     st.subheader("Entrar")
     st.write("Use sua conta Google para acessar a lista compartilhada.")
-    redirect_url = setting("SUPABASE_REDIRECT_URL")
+    redirect_url = get_redirect_url()
     response = client.auth.sign_in_with_oauth({
         "provider": "google",
         "options": {"redirect_to": redirect_url},

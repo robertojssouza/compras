@@ -9,10 +9,10 @@ Crie o arquivo `.streamlit/secrets.toml`:
 ```toml
 SUPABASE_URL = "https://seu-projeto.supabase.co"
 SUPABASE_ANON_KEY = "sua-chave-publica"
-SUPABASE_REDIRECT_URL = "https://seu-app.streamlit.app"
+SUPABASE_REDIRECT_URL = "https://seu-app.streamlit.app" # opcional
 ```
 
-Use a URL e a chave pública `anon`/`publishable` em **Project Settings > API**. Nunca use a chave `service_role`. `SUPABASE_REDIRECT_URL` deve ser a URL pública exata do app Streamlit.
+Use a URL e a chave pública `anon`/`publishable` em **Project Settings > API**. Nunca use a chave `service_role`. `SUPABASE_REDIRECT_URL` é opcional; quando ausente, o app tenta detectar automaticamente a URL atual.
 
 Instale e execute:
 
@@ -56,7 +56,7 @@ Depois de executar o SQL e configurar o primeiro e-mail, abra o app, entre com a
 ```toml
 SUPABASE_URL = "https://seu-projeto.supabase.co"
 SUPABASE_ANON_KEY = "sua-chave-publica"
-SUPABASE_REDIRECT_URL = "https://seu-app.streamlit.app"
+SUPABASE_REDIRECT_URL = "https://seu-app.streamlit.app" # opcional
 ```
 
 O arquivo local `.streamlit/secrets.toml` está protegido pelo `.gitignore`.
