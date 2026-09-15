@@ -11,7 +11,7 @@ st.set_page_config(page_title="Lista de compras", page_icon="🛒", layout="wide
 st.markdown(
     """
     <style>
-    /* Remove o espaço superior da página e oculta o cabeçalho nativo */
+    /* Remove o topo em branco e oculta o cabeçalho nativo */
     .stAppViewContainer .main .block-container,
     .block-container {
         padding-top: 0rem !important;
@@ -21,7 +21,7 @@ st.markdown(
         height: 0vh !important;
     }
 
-    /* Trava a linha horizontal sem permitir que os botões quebrem de posição */
+    /* Trava a linha em uma única fila horizontal (evita que o botão X suba no celular) */
     .st-key-items-table [data-testid="stHorizontalBlock"],
     .st-key-items-table [class*="st-key-item-row-"] {
         display: flex !important;
@@ -29,35 +29,52 @@ st.markdown(
         flex-wrap: nowrap !important;
         align-items: center !important;
         justify-content: space-between !important;
-        gap: 0.5rem !important;
         width: 100% !important;
+        gap: 0.4rem !important;
         margin: 0 !important;
     }
 
-    /* Botão Comprar / Desfazer fixo à esquerda */
+    /* 1. Botão Comprar / Desfazer (Esquerda) */
     .st-key-items-table [class*="st-key-item-action-"] {
         flex: 0 0 auto !important;
     }
 
-    /* ÁREA DO NOME + QUANTIDADE: flexível no meio */
+    /* 2. Container do Texto (Centro) */
     .st-key-items-table [class*="st-key-item-name-"] {
         flex: 1 1 auto !important;
         min-width: 0 !important;
+        overflow: hidden !important;
     }
 
-    /* Permite quebrar linha para NÃO CORTAR o nome nem a quantidade e NUNCA usar '...' */
-    .st-key-items-table [class*="st-key-item-name-"] p,
-    .st-key-items-table [class*="st-key-item-name-"] [data-testid="stMarkdownContainer"] p {
-        white-space: normal !important;
-        word-break: break-word !important;
-        overflow: visible !important;
-        text-overflow: clip !important;
-        margin: 0 !important;
-        line-height: 1.3 !important;
-        font-size: 0.95rem !important;
+    /* Layout interno para Nome + Quantidade na mesma linha */
+    .item-label-container {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.3rem !important;
+        width: 100% !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
     }
 
-    /* Botão X colado na extrema direita */
+    /* O nome encurta com '...' se for muito grande para a tela */
+    .item-name-text {
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        flex: 0 1 auto !important;
+        min-width: 0 !important;
+        font-size: 0.95rem;
+    }
+
+    /* A quantidade NUNCA corta, NUNCA some e fica SEMPRE colada no nome */
+    .item-qty-text {
+        flex: 0 0 auto !important;
+        white-space: nowrap !important;
+        color: #4b5563;
+        font-size: 0.88rem;
+    }
+
+    /* 3. Botão X (Fixado no canto direito) */
     .st-key-items-table [class*="st-key-item-delete-"] {
         flex: 0 0 auto !important;
         margin-left: auto !important;
@@ -172,13 +189,17 @@ def render_items(client: Client, active_list: dict[str, Any]) -> None:
                         }).execute()
                         st.rerun()
                 
-                label = (
-                    f"~~{item['name']} · {item['quantity']}~~"
-                    if item["is_purchased"]
-                    else f"**{item['name']}** · {item['quantity']}"
-                )
+                # Monta o HTML flexível: Nome encurta se preciso, Quantidade SEMPRE visível ao lado
+                name_style = "text-decoration: line-through; opacity: 0.6;" if item["is_purchased"] else "font-weight: 600;"
+                label_html = f"""
+                <div class="item-label-container">
+                    <span class="item-name-text" style="{name_style}">{item['name']}</span>
+                    <span class="item-qty-text">· {item['quantity']}</span>
+                </div>
+                """
+                
                 with st.container(key=f"item-name-{item['id']}"):               
-                    st.markdown(label)
+                    st.markdown(label_html, unsafe_allow_html=True)
                 
                 with st.container(key=f"item-delete-{item['id']}"):               
                     if st.button(
