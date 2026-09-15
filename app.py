@@ -68,6 +68,7 @@ st.markdown(
         .st-key-items-table [class*="st-key-item-delete-"] {
             flex: 0 0 30px !important;
             width: 30px !important;
+            margin-left: 0.4rem !important;
         }
     }
     .st-key-items-table [data-testid="stMarkdownContainer"] {
